@@ -1,7 +1,6 @@
 # Alfabeto válido: [0-9], +, -, ., *, /
 ## Números e os operadores básicos + pontos
 NUMS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
-# NUMS = [0,1,2,3,4,5,6,7,8,9]
 
 OPERATORS = {
     "+": "plus",
@@ -14,33 +13,48 @@ OPERATORS = {
     " ": "space"
 }
 
-def read_text(text):
+
+def analyze_text(text):
+    """
+    Analisa o texto e retorna dois dicionários de listas:
+      - tokens: caracteres válidos do alfabeto
+      - erros: caracteres fora do alfabeto
+    """
+    tokens = []
+    erros = []
+
     linha = 1
     coluna = 1
 
-    for caracter in text: 
-        if caracter == "\n":
-            linha += 1
+    for caracter in text:
+        if caracter in ("\n", "\r"):
+            if caracter == "\n":
+                linha += 1
+                coluna = 1
+            continue
 
         if caracter in OPERATORS:
-            print(f"O caracter lido foi: {caracter} -> {OPERATORS[caracter]}")
-            print(f"Caractere lido na coluna {coluna} - linha: {linha}\n")
+            tokens.append({
+                "Caractere": caracter,
+                "Tipo": OPERATORS[caracter],
+                "Coluna": coluna,
+                "Linha": linha,
+            })
         elif caracter in NUMS:
-            numero = int(caracter)
-            print(f"O digito lido foi: {numero} -> number")
-            print(f"Caractere lido na coluna {coluna} - linha: {linha}\n")     
+            tokens.append({
+                "Caractere": caracter,
+                "Tipo": "inteiro",
+                "Coluna": coluna,
+                "Linha": linha,
+            })
         else:
-            print(f"CARACTERE INVÁLIDO")    
+            erros.append({
+                "Caractere": caracter,
+                "Mensagem": "Fora do alfabeto",
+                "Coluna": coluna,
+                "Linha": linha,
+            })
 
         coluna += 1
 
-
-teste = input("Digite algo: ")
-read_text(teste)
-
-
-# Ler texto de fora (primeira ideia de usar open)
-## Depois com a interface trocar o "lorem.txt" pelo o que o usuário colocar
-# with open("lorem.txt", "r") as file: 
-#     content = file.read()
-#     read_text(content)
+    return tokens, erros
