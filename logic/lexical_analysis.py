@@ -58,7 +58,6 @@ class Token:
     def __str__(self):
         return f"token name: {self.name}"
         
-
 class LexicalAnalyzer:
 
     def __init__(self, alphabet:Alphabet, source_code:str, tokens:list):
@@ -186,13 +185,7 @@ class LexicalAnalyzer:
 
             # Get the string
             string = self.source_code[initial_pos, self.pos]
-
-            # Check if it is a keyword or identifier
-            #!!!
-            # Return the token
  
-
-        
     # Update cursor position
 
     def __is_cursor_at_eof(self):
@@ -357,3 +350,9 @@ if __name__ == '__main__':
 
     
 
+# PENDENTE:
+# Eliminação de espaços
+# Adição de operadores e separadores remanescentes
+# Testes de erros encontrados pelo léxico
+# Criação de tabela de memória auxiliar para identificadores e palavras reservadas
+# Carregamento de símbolos e tokens ao invés de criação no código
