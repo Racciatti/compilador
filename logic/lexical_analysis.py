@@ -1,60 +1,359 @@
-# Alfabeto válido: [0-9], +, -, ., *, /
-## Números e os operadores básicos + pontos
-NUMS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
-
-OPERATORS = {
-    "+": "plus",
-    "-": "minus",
-    "*": "multiplier",
-    "/": "divider", 
-    ".": "dot",
-    "(": "open_par",
-    ")": "close_par",
-    " ": "space"
-}
-
-
-def analyze_text(text):
+class Symbol:
     """
-    Analisa o texto e retorna dois dicionários de listas:
-      - tokens: caracteres válidos do alfabeto
-      - erros: caracteres fora do alfabeto
+    A symbol is the atomic unit in a language. 
+    Each symbol (character) has a name and certain properties. 
     """
-    tokens = []
-    erros = []
 
-    linha = 1
-    coluna = 1
+    def __init__(self, symbol:str, name:str, is_separator:bool=False, is_digit:bool = False, is_character:bool=False):
+        self.symbol = symbol
+        self.name = name
+        self.properties = {}
+        self.properties['is_separator'] = is_separator
+        self.properties['is_digit'] = is_digit
+        self.properties['is_character'] = is_character
+        
+class Alphabet:
+    """
+    An alphabet is defined by a set of symbols.
+    """
+    def __init__(self, symbols:set):
+        self.symbols = {symbol.symbol : symbol for symbol in symbols} # Dict structure with symbol.symbol as key and symbol object as value
+        self.existing_symbols = list(self.symbols.keys())
+            
+    def contains_symbol(self, symbol:str)->bool:
+        return symbol in self.existing_symbols
+    
+    def is_separator(self, symbol:str)->bool:
+        return self.__get_symbol(symbol).properties['is_separator']
 
-    for caracter in text:
-        if caracter in ("\n", "\r"):
-            if caracter == "\n":
-                linha += 1
-                coluna = 1
-            continue
+    def is_digit(self, symbol:str)->bool:
+        return self.__get_symbol(symbol).properties['is_digit']
+    
+    def is_character(self, symbol:str)->bool:
+        return self.__get_symbol(symbol).properties['is_character']
+    
+    def __get_symbol(self, symbol:str)->Symbol:
+        if self.contains_symbol(symbol):
+            return self.symbols[symbol]
+        
+        return None
+    
+    def __str__(self):
+        ans = ""
+        for symbol in self.symbols:
+            ans += f"{symbol}:{self.symbols[symbol].name}\n"
+        
+        return ans
 
-        if caracter in OPERATORS:
-            tokens.append({
-                "Caractere": caracter,
-                "Tipo": OPERATORS[caracter],
-                "Coluna": coluna,
-                "Linha": linha,
-            })
-        elif caracter in NUMS:
-            tokens.append({
-                "Caractere": caracter,
-                "Tipo": "inteiro",
-                "Coluna": coluna,
-                "Linha": linha,
-            })
+class Token:    
+    """
+    A token is formed by one or more symbols. 
+    Valid tokens can be joined in order to form higher level abstractions. 
+    """
+    
+    def __init__(self, name:str, key:str):
+        self.name = name
+        self.key = key
+    
+    def __str__(self):
+        return f"token name: {self.name}"
+        
+
+class LexicalAnalyzer:
+
+    def __init__(self, alphabet:Alphabet, source_code:str, tokens:list):
+        
+
+        # Store tokens as a dict for quick comparison and access. 
+        self.tokens_dict = {token.key:token for token in tokens}
+        
+        # Check if required tokens were passed
+        required_token_keys = 'int real id'.split()
+        for token_key in required_token_keys:
+            if token_key not in self.tokens_dict:
+                raise ValueError(f'The token {token_key} is required and was not provided')
+        
+        # The alphabet the lexical analyzer will be based upon
+        self.alphabet = alphabet
+
+        # Current cursor position
+        self.pos = 0
+        
+        # The current line and column of the cursor
+        self.col = 0
+        self.lin = 0
+        
+        # Add SOF and EOF symbols to the source code
+        self.source_code = source_code + '$'
+
+        # Max cursor position before EOF
+        self.max_pos = len(source_code) - 1
+
+
+    def get_next_token(self):
+        
+        # If we reached EOF, return None
+        if self.__get_current_symbol() == '$':
+            return None
+
+        # If it doesn't belong to the alphabet
+        if not self.__is_current_symbol_valid():
+            return self.__throw_error_for_current_symbol(f'ERROR: Symbol "{self.__get_current_symbol()}" not in alphabet')
+        
+        # If it is a separator (!NOTE "is_separator" is being used as what should be "is_unitary". They match for this alphabet, but that is not a gurantee)
+        if self.__is_current_symbol_separator():
+
+            
+            
+            # Check if the current character is indeed a registered token
+            if self.__get_current_symbol() not in list(self.tokens_dict.keys()):
+                raise Exception('Symbol is separator and is in the alphabet, but it is not a key associated to a token')
+
+            return self.__return_token()
+            
+        # If it's not a separator, it's either a digit, a character or a dot
+        if self.__get_current_symbol() == '.':
+            return self.__throw_error_for_current_symbol("ERROR: Unexpected '.'")
+
+        # If it starts with a character, it has to be an identifier or keyword
+        if self.__is_current_symbol_character():
+            
+            
+            # Regardless of the token type, this has to be a sequence of characters and digits. Once we find a separator, we got the string
+            initial_pos = self.pos
+
+            # While we go through characters and digits, update the cursor position and the source_code index
+            while True:
+                self.__cursor_right()
+                
+                # Once we find a separator, stop incrementing
+                if not (self.__is_current_symbol_digit() or self.__is_current_symbol_character()):
+                    break
+            
+            self.__cursor_left()
+            return self.__return_token('id')
+
+
+        # If it starts with a number, it has to be a real number or an integer
+        if self.__is_current_symbol_digit():
+
+
+            # Regardless of the token type, this has to be a sequence of digits
+            initial_pos = self.pos
+
+            # While we go through digits, update the cursor position and the source_code index
+            while True:
+                self.__cursor_right()
+                
+                # Once we find something that is not a digit, stop incrementing
+                if not self.__is_current_symbol_digit():
+                    break
+            
+            # If we have a separator, this is an integer
+            if self.__is_current_symbol_separator():
+                self.__cursor_left()
+                return self.__return_token('int')
+
+            # If we have a dot, this has to be a real number
+            elif self.__get_current_symbol() == '.':
+
+                # In order to validate the real number, we increment and check if we have a number after the dot
+                
+                self.__cursor_right()
+
+                # If we do have at least one digit
+                if self.__is_current_symbol_digit():
+                    
+                    # all symbols after the initial digit must be a digit until we find a separator
+                    while True:
+                        
+                        self.__cursor_right()
+                        if not self.__is_current_symbol_digit():
+                            break
+                    
+                    # If after the stream of numbers we do not have a separator
+                    if not self.__is_current_symbol_separator():
+                        return self.__throw_error_for_current_symbol(f'ERROR: real number "{self.source_code[initial_pos, self.pos+1]}" is malformed')
+
+                    # Otherwise, this is a valid real number
+                    else: 
+                        self.__cursor_left()
+                        return self.__return_token('real')
+
+            # If it is neither a separator nor a dot, this is a malformation (characters after a number)
+            else:
+                return self.__throw_error_for_current_symbol(f'ERROR: number {self.source_code[initial_pos, self.pos+1]} is malformed') 
+
+            # Get the string
+            string = self.source_code[initial_pos, self.pos]
+
+            # Check if it is a keyword or identifier
+            #!!!
+            # Return the token
+ 
+
+        
+    # Update cursor position
+
+    def __is_cursor_at_eof(self):
+        print(f'pos: {self.pos}, max_pos:{self.max_pos}')
+        return self.pos == self.max_pos  
+
+    def __cursor_new_line(self):
+        self.col=0
+        self.lin+=1
+        self.pos+=1
+    
+    def __cursor_right(self):
+        self.pos+=1
+        self.col+=1
+    
+    def __cursor_left(self):
+        self.pos-=1
+        self.col-=1
+
+    def __is_current_symbol_digit(self)->bool:
+        return self.alphabet.is_digit(self.__get_current_symbol())
+        
+    def __is_current_symbol_separator(self)->bool:
+        return self.alphabet.is_separator(self.__get_current_symbol())
+
+    def __is_current_symbol_character(self)->bool:
+        return self.alphabet.is_character(self.__get_current_symbol())
+
+    def __is_current_symbol_valid(self)->bool:
+        return self.alphabet.contains_symbol(self.__get_current_symbol())
+
+    def __get_current_symbol(self)->str:
+        return self.source_code[self.pos]
+
+    # We'll probably need something more elaborate here
+    def __throw_error_for_current_symbol(self, error_str:str):
+        return error_str
+
+    def __return_token(self, token:str = None):
+        """
+        Use the symbol under the cursor or a passed argument to create a token and return it, whilst also moving the cursor.
+        """
+        current_token = self.tokens_dict[self.__get_current_symbol()] if token is None else self.tokens_dict[token]
+        if current_token.key == '\n':
+            self.__cursor_new_line()
         else:
-            erros.append({
-                "Caractere": caracter,
-                "Mensagem": "Fora do alfabeto",
-                "Coluna": coluna,
-                "Linha": linha,
-            })
+            self.__cursor_right()
+        return current_token
 
-        coluna += 1
 
-    return tokens, erros
+    
+
+if __name__ == '__main__':
+    
+    # Defining symbols - TRANSFORMAR EM CRIAÇÃO COM BASE EM CSV / TXT !!!
+    symbols = [
+        Symbol('0', 'digit_0',      is_digit=True),
+        Symbol('1', 'digit_1',      is_digit=True),
+        Symbol('2', 'digit_2',      is_digit=True),
+        Symbol('3', 'digit_3',      is_digit=True),
+        Symbol('4', 'digit_4',      is_digit=True),
+        Symbol('5', 'digit_5',      is_digit=True),
+        Symbol('6', 'digit_6',      is_digit=True),
+        Symbol('7', 'digit_7',      is_digit=True),
+        Symbol('8', 'digit_8',      is_digit=True),
+        Symbol('9', 'digit_9',      is_digit=True),
+        Symbol("a", 'character_a',  is_character=True),
+        Symbol("b", 'character_b',  is_character=True),
+        Symbol("c", 'character_c',  is_character=True),
+        Symbol("d", 'character_d',  is_character=True),
+        Symbol("e", 'character_e',  is_character=True),
+        Symbol("f", 'character_f',  is_character=True),
+        Symbol("g", 'character_g',  is_character=True),
+        Symbol("h", 'character_h',  is_character=True),
+        Symbol("i", 'character_i',  is_character=True),
+        Symbol("j", 'character_j',  is_character=True),
+        Symbol("k", 'character_k',  is_character=True),
+        Symbol("l", 'character_l',  is_character=True),
+        Symbol("m", 'character_m',  is_character=True),
+        Symbol("n", 'character_n',  is_character=True),
+        Symbol("o", 'character_o',  is_character=True),
+        Symbol("p", 'character_p',  is_character=True),
+        Symbol("q", 'character_q',  is_character=True),
+        Symbol("r", 'character_r',  is_character=True),
+        Symbol("s", 'character_s',  is_character=True),
+        Symbol("t", 'character_t',  is_character=True),
+        Symbol("u", 'character_u',  is_character=True),
+        Symbol("v", 'character_v',  is_character=True),
+        Symbol("w", 'character_w',  is_character=True),
+        Symbol("x", 'character_x',  is_character=True),
+        Symbol("y", 'character_y',  is_character=True),
+        Symbol("z", 'character_z',  is_character=True),
+        Symbol("A", 'character_A',  is_character=True),
+        Symbol("B", 'character_B',  is_character=True),
+        Symbol("C", 'character_C',  is_character=True),
+        Symbol("D", 'character_D',  is_character=True),
+        Symbol("E", 'character_E',  is_character=True),
+        Symbol("F", 'character_F',  is_character=True),
+        Symbol("G", 'character_G',  is_character=True),
+        Symbol("H", 'character_H',  is_character=True),
+        Symbol("I", 'character_I',  is_character=True),
+        Symbol("J", 'character_J',  is_character=True),
+        Symbol("K", 'character_K',  is_character=True),
+        Symbol("L", 'character_L',  is_character=True),
+        Symbol("M", 'character_M',  is_character=True),
+        Symbol("N", 'character_N',  is_character=True),
+        Symbol("O", 'character_O',  is_character=True),
+        Symbol("P", 'character_P',  is_character=True),
+        Symbol("Q", 'character_Q',  is_character=True),
+        Symbol("R", 'character_R',  is_character=True),
+        Symbol("S", 'character_S',  is_character=True),
+        Symbol("T", 'character_T',  is_character=True),
+        Symbol("U", 'character_U',  is_character=True),
+        Symbol("V", 'character_V',  is_character=True),
+        Symbol("W", 'character_W',  is_character=True),
+        Symbol("X", 'character_X',  is_character=True),
+        Symbol("Y", 'character_Y',  is_character=True),
+        Symbol("Z", 'character_Z',  is_character=True),
+
+        # OPERATORS
+        Symbol("+", "plus",         is_separator=True       ),
+        Symbol("-", "minus",        is_separator=True      ),
+        Symbol("*", "multiplier",   is_separator=True ),
+        Symbol("/", "divider",      is_separator=True    ),
+        
+        # MISC
+        Symbol('\n',"new_line",     is_separator=True),
+        Symbol(' ', "space",        is_separator=True),
+        Symbol('.', "dot"),
+        Symbol('(', "open_p",       is_separator=True),
+        Symbol(')', "close_p",      is_separator=True),
+        Symbol('$', "eof",          is_separator=True)
+    ]
+
+    tokens = [
+        Token(name='op_sum',            key="+"),
+        Token(name='op_sub',            key="-"),
+        Token(name='op_div',            key="/"),
+        Token(name='op_mul',            key="*"),
+        Token(name='real_number',       key="real"),
+        Token(name='integer',           key='int'),
+        Token(name='keyword',           key='key'),
+        Token(name='identifier',        key='id'),
+        Token(name='space',             key=' ')
+    ]
+    
+    # Creating alphabet from symbols
+    alphabet = Alphabet(symbols=set(symbols))   
+    print("ALFABETO CRIADO:")
+    print(alphabet.__str__())
+
+    input_str = input()
+
+    # Create lexical analyzer
+    lexical = LexicalAnalyzer(alphabet, source_code=input_str, tokens=tokens)
+
+    current_token = Token('SOF', 'SOF')
+
+    while current_token is not None:
+        current_token = lexical.get_next_token()
+        print(current_token.__str__())
+
+    
+
