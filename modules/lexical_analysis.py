@@ -343,6 +343,7 @@ if __name__ == '__main__':
         Symbol("X", 'character_X',  is_character=True),
         Symbol("Y", 'character_Y',  is_character=True),
         Symbol("Z", 'character_Z',  is_character=True),
+        Symbol("_", 'underline',    is_character=True),
 
         # OPERATORS
         Symbol("+", "plus",         is_separator=True),
