@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from logic.lexical_analysis import analyze_text
+from modules.lexical_analysis import analyze_text
 
 st.set_page_config("Calculadora", layout="centered")
 

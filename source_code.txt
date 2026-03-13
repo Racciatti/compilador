@@ -1,0 +1,7 @@
+function sum(a,b):
+begin
+a = 5.14
+b = 12
+res = a + b
+return res
+end

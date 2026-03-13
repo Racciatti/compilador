@@ -7,7 +7,7 @@ import io
 # Adiciona o diretório pai ao path para importar o módulo logic
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from logic.lexical_analysis import read_text
+from modules.lexical_analysis import read_text
 
 class AnalisadorLexicoGUI:
     def __init__(self, root):
