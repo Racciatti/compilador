@@ -373,7 +373,9 @@ if __name__ == '__main__':
         # MISC
         Symbol('\n',"new_line",     is_separator=True),
         Symbol(' ', "space",        is_separator=True),
+        Symbol(',', "comma",        is_separator=True),
         Symbol(':', "colon",        is_separator=True),
+        Symbol(';', "semicolon",    is_separator=True),
         Symbol('=', "equals",       is_separator=True),
         Symbol('$', "eof",          is_separator=True),
         Symbol('.', "dot")
@@ -384,6 +386,7 @@ if __name__ == '__main__':
     '-':    'op_sub', 
     '*':    'op_mul',
     '/':    'op_div',
+    '=':    'op_eq',
     'real': 'real_number',
     'int':  'integer',
     'key':  'keyword',
@@ -392,7 +395,10 @@ if __name__ == '__main__':
     '(':    'open_p',
     ')':    'close_p',
     ':':    'colon',
-    '\n':   'new_line'
+    '\n':   'new_line',
+    ',':    'comma',
+    ';':    'semicolon',
+
     }
 
 
