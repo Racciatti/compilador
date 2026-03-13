@@ -51,20 +51,27 @@ class Token:
     Valid tokens can be joined in order to form higher level abstractions. 
     """
     
-    def __init__(self, name:str, key:str):
+    def __init__(self, name:str, value:str, col:int, lin:int):
         self.name = name
-        self.key = key
+        self.value = value
+        self.col = col
+        self.lin = lin
     
     def __str__(self):
-        return f"token name: {self.name}"
+
+        return f"""
+                token name: {self.name}
+                token value:{self.value}
+                token pos: {self.lin, self.col}
+                """
         
 class LexicalAnalyzer:
 
-    def __init__(self, alphabet:Alphabet, source_code:str, tokens:list):
+    def __init__(self, alphabet:Alphabet, source_code:str, tokens_dict:dict):
         
 
         # Store tokens as a dict for quick comparison and access. 
-        self.tokens_dict = {token.key:token for token in tokens}
+        self.tokens_dict = tokens_dict
         
         # Check if required tokens were passed
         required_token_keys = 'int real id'.split()
@@ -120,6 +127,7 @@ class LexicalAnalyzer:
             
             # Regardless of the token type, this has to be a sequence of characters and digits. Once we find a separator, we got the string
             initial_pos = self.pos
+            initial_col = self.col
 
             # While we go through characters and digits, update the cursor position and the source_code index
             while True:
@@ -130,7 +138,9 @@ class LexicalAnalyzer:
                     break
             
             self.__cursor_left()
-            return self.__return_token('id')
+
+            value = self.source_code[initial_pos:self.pos + 1]
+            return self.__return_token(token_value=value, token_col=initial_col, token_key='id', token_lin=self.lin)
 
 
         # If it starts with a number, it has to be a real number or an integer
@@ -139,6 +149,7 @@ class LexicalAnalyzer:
 
             # Regardless of the token type, this has to be a sequence of digits
             initial_pos = self.pos
+            initial_col = self.col
 
             # While we go through digits, update the cursor position and the source_code index
             while True:
@@ -150,8 +161,11 @@ class LexicalAnalyzer:
             
             # If we have a separator, this is an integer
             if self.__is_current_symbol_separator():
+                
                 self.__cursor_left()
-                return self.__return_token('int')
+                
+                value = self.source_code[initial_pos:self.pos + 1]
+                return self.__return_token(token_value=value, token_col=initial_col, token_key='int', token_lin=self.lin)
 
             # If we have a dot, this has to be a real number
             elif self.__get_current_symbol() == '.':
@@ -177,7 +191,8 @@ class LexicalAnalyzer:
                     # Otherwise, this is a valid real number
                     else: 
                         self.__cursor_left()
-                        return self.__return_token('real')
+                        value = self.source_code[initial_pos:self.pos + 1]
+                        return self.__return_token(token_value=value, token_col=initial_col, token_key='real', token_lin=self.lin)
 
             # If it is neither a separator nor a dot, this is a malformation (characters after a number)
             else:
@@ -224,16 +239,32 @@ class LexicalAnalyzer:
     def __throw_error_for_current_symbol(self, error_str:str):
         return error_str
 
-    def __return_token(self, token:str = None):
+    def __return_token(self, token_value:str = None, token_col:int = None, token_lin:int = None, token_key:str = None):
         """
-        Use the symbol under the cursor or a passed argument to create a token and return it, whilst also moving the cursor.
+        Use the symbol under the cursor or passed arguments to create a token and return it, whilst also moving the cursor.
         """
-        current_token = self.tokens_dict[self.__get_current_symbol()] if token is None else self.tokens_dict[token]
-        if current_token.key == '\n':
+
+        print('called return token with', token_value, token_col, token_lin, token_key)
+
+        # If the token key is merely the symbol in which the cursor is on right now, set token attributes based on cursor position
+        if token_key is None:
+            current_symbol = self.__get_current_symbol()
+            token_name = self.tokens_dict[current_symbol]
+            token_value = current_symbol
+            token_col = self.col
+            token_lin = self.lin
+            token = Token(name=token_name, value=token_value, col=token_col, lin=token_lin)
+        
+        else: 
+            token_name = self.tokens_dict[token_key]
+            token = Token(name=token_name, value=token_value, col=token_col, lin=token_lin)
+            
+        if token_value == '\n':
             self.__cursor_new_line()
         else:
             self.__cursor_right()
-        return current_token
+
+        return token
 
 
     
@@ -320,18 +351,18 @@ if __name__ == '__main__':
         Symbol('$', "eof",          is_separator=True)
     ]
 
-    tokens = [
-        Token(name='op_sum',            key="+"),
-        Token(name='op_sub',            key="-"),
-        Token(name='op_div',            key="/"),
-        Token(name='op_mul',            key="*"),
-        Token(name='real_number',       key="real"),
-        Token(name='integer',           key='int'),
-        Token(name='keyword',           key='key'),
-        Token(name='identifier',        key='id'),
-        Token(name='space',             key=' ')
-    ]
-    
+    tokens_dict ={
+    '+':    'op_sum',
+    '-':    'op_sub', 
+    '*':    'op_mul',
+    '/':    'op_div',
+    'real': 'real_number',
+    'int':  'integer',
+    'key':  'keyword',
+    'id':   'identifier',
+    ' ':    'space'
+    }
+
     # Creating alphabet from symbols
     alphabet = Alphabet(symbols=set(symbols))   
     print("ALFABETO CRIADO:")
@@ -340,9 +371,9 @@ if __name__ == '__main__':
     input_str = input()
 
     # Create lexical analyzer
-    lexical = LexicalAnalyzer(alphabet, source_code=input_str, tokens=tokens)
+    lexical = LexicalAnalyzer(alphabet, source_code=input_str, tokens_dict=tokens_dict)
 
-    current_token = Token('SOF', 'SOF')
+    current_token = Token('SOF', 'SOF', -1, -1)
 
     while current_token is not None:
         current_token = lexical.get_next_token()
