@@ -1,3 +1,5 @@
+import pandas as pd
+
 class Symbol:
     """
     A symbol is the atomic unit in a language. 
@@ -68,8 +70,6 @@ class Token:
 class LexicalAnalyzer:
 
     def __init__(self, alphabet:Alphabet, source_code:str, tokens_dict:dict):
-        
-
         # Store tokens as a dict for quick comparison and access. 
         self.tokens_dict = tokens_dict
         
@@ -104,13 +104,13 @@ class LexicalAnalyzer:
 
         # If it doesn't belong to the alphabet
         if not self.__is_current_symbol_valid():
+
+            # Return an error
             return self.__throw_error_for_current_symbol(f'ERROR: Symbol "{self.__get_current_symbol()}" not in alphabet')
         
         # If it is a separator (!NOTE "is_separator" is being used as what should be "is_unitary". They match for this alphabet, but that is not a gurantee)
         if self.__is_current_symbol_separator():
 
-            
-            
             # Check if the current character is indeed a registered token
             if self.__get_current_symbol() not in list(self.tokens_dict.keys()):
                 raise Exception('Symbol is separator and is in the alphabet, but it is not a key associated to a token')
@@ -202,16 +202,17 @@ class LexicalAnalyzer:
             string = self.source_code[initial_pos, self.pos]
  
     # Update cursor position
-
     def __cursor_new_line(self):
         self.col=0
         self.lin+=1
         self.pos+=1
     
+    # Update cursor position
     def __cursor_right(self):
         self.pos+=1
         self.col+=1
     
+    # Update cursor position
     def __cursor_left(self):
         self.pos-=1
         self.col-=1
@@ -231,7 +232,7 @@ class LexicalAnalyzer:
     def __get_current_symbol(self)->str:
         return self.source_code[self.pos]
 
-    # We'll probably need something more elaborate here
+    # We'll probably need something more elaborate here, so the method has already been created
     def __throw_error_for_current_symbol(self, error_str:str):
         return error_str
 
@@ -263,89 +264,25 @@ class LexicalAnalyzer:
         return token
 
 
+def load_symbols(symbols_data_path:str='../symbols.csv')->set:
+
+    symbols_df = pd.read_csv(symbols_data_path)
     
+    symbols_list = [
+        Symbol(
+            symbol=element[1]['symbol'], 
+            name=element[1]['name'], 
+            is_separator=element[1]['is_sep'], 
+            is_digit=element[1]['is_digit'], 
+            is_character=element[1]['is_char'])
+            
+            for element in symbols_df.iterrows()
+    ]
+
+    return set(symbols_list)
+
 
 if __name__ == '__main__':
-    
-    # Defining symbols - TRANSFORMAR EM CRIAÇÃO COM BASE EM CSV / TXT !!!
-    symbols = [
-        Symbol('0', 'digit_0',      is_digit=True),
-        Symbol('1', 'digit_1',      is_digit=True),
-        Symbol('2', 'digit_2',      is_digit=True),
-        Symbol('3', 'digit_3',      is_digit=True),
-        Symbol('4', 'digit_4',      is_digit=True),
-        Symbol('5', 'digit_5',      is_digit=True),
-        Symbol('6', 'digit_6',      is_digit=True),
-        Symbol('7', 'digit_7',      is_digit=True),
-        Symbol('8', 'digit_8',      is_digit=True),
-        Symbol('9', 'digit_9',      is_digit=True),
-        Symbol("a", 'character_a',  is_character=True),
-        Symbol("b", 'character_b',  is_character=True),
-        Symbol("c", 'character_c',  is_character=True),
-        Symbol("d", 'character_d',  is_character=True),
-        Symbol("e", 'character_e',  is_character=True),
-        Symbol("f", 'character_f',  is_character=True),
-        Symbol("g", 'character_g',  is_character=True),
-        Symbol("h", 'character_h',  is_character=True),
-        Symbol("i", 'character_i',  is_character=True),
-        Symbol("j", 'character_j',  is_character=True),
-        Symbol("k", 'character_k',  is_character=True),
-        Symbol("l", 'character_l',  is_character=True),
-        Symbol("m", 'character_m',  is_character=True),
-        Symbol("n", 'character_n',  is_character=True),
-        Symbol("o", 'character_o',  is_character=True),
-        Symbol("p", 'character_p',  is_character=True),
-        Symbol("q", 'character_q',  is_character=True),
-        Symbol("r", 'character_r',  is_character=True),
-        Symbol("s", 'character_s',  is_character=True),
-        Symbol("t", 'character_t',  is_character=True),
-        Symbol("u", 'character_u',  is_character=True),
-        Symbol("v", 'character_v',  is_character=True),
-        Symbol("w", 'character_w',  is_character=True),
-        Symbol("x", 'character_x',  is_character=True),
-        Symbol("y", 'character_y',  is_character=True),
-        Symbol("z", 'character_z',  is_character=True),
-        Symbol("A", 'character_A',  is_character=True),
-        Symbol("B", 'character_B',  is_character=True),
-        Symbol("C", 'character_C',  is_character=True),
-        Symbol("D", 'character_D',  is_character=True),
-        Symbol("E", 'character_E',  is_character=True),
-        Symbol("F", 'character_F',  is_character=True),
-        Symbol("G", 'character_G',  is_character=True),
-        Symbol("H", 'character_H',  is_character=True),
-        Symbol("I", 'character_I',  is_character=True),
-        Symbol("J", 'character_J',  is_character=True),
-        Symbol("K", 'character_K',  is_character=True),
-        Symbol("L", 'character_L',  is_character=True),
-        Symbol("M", 'character_M',  is_character=True),
-        Symbol("N", 'character_N',  is_character=True),
-        Symbol("O", 'character_O',  is_character=True),
-        Symbol("P", 'character_P',  is_character=True),
-        Symbol("Q", 'character_Q',  is_character=True),
-        Symbol("R", 'character_R',  is_character=True),
-        Symbol("S", 'character_S',  is_character=True),
-        Symbol("T", 'character_T',  is_character=True),
-        Symbol("U", 'character_U',  is_character=True),
-        Symbol("V", 'character_V',  is_character=True),
-        Symbol("W", 'character_W',  is_character=True),
-        Symbol("X", 'character_X',  is_character=True),
-        Symbol("Y", 'character_Y',  is_character=True),
-        Symbol("Z", 'character_Z',  is_character=True),
-
-        # OPERATORS
-        Symbol("+", "plus",         is_separator=True       ),
-        Symbol("-", "minus",        is_separator=True      ),
-        Symbol("*", "multiplier",   is_separator=True ),
-        Symbol("/", "divider",      is_separator=True    ),
-        
-        # MISC
-        Symbol('\n',"new_line",     is_separator=True),
-        Symbol(' ', "space",        is_separator=True),
-        Symbol('.', "dot"),
-        Symbol('(', "open_p",       is_separator=True),
-        Symbol(')', "close_p",      is_separator=True),
-        Symbol('$', "eof",          is_separator=True)
-    ]
 
     tokens_dict ={
     '+':    'op_sum',
@@ -356,19 +293,26 @@ if __name__ == '__main__':
     'int':  'integer',
     'key':  'keyword',
     'id':   'identifier',
-    ' ':    'space'
+    ' ':    'space',
+    '(':    'open_p',
+    ')':    'close_p',
+    ':':    'colon',
+
     }
 
+    # Loading and creating symbols
+    symbols = load_symbols()
+
     # Creating alphabet from symbols
-    alphabet = Alphabet(symbols=set(symbols))   
-    print("ALFABETO CRIADO:")
-    print(alphabet.__str__())
+    alphabet = Alphabet(symbols)   
 
+    # User input for testing
     input_str = input()
-
+    
     # Create lexical analyzer
     lexical = LexicalAnalyzer(alphabet, source_code=input_str, tokens_dict=tokens_dict)
 
+    # Add start of file token to start the mainloop
     current_token = Token('SOF', 'SOF', -1, -1)
 
     while current_token is not None:
