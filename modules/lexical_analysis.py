@@ -274,24 +274,6 @@ class LexicalAnalyzer:
 
         return token
 
-def load_symbols(symbols_data_path:str='../data/symbols.csv')->set:
-
-    symbols_df = pd.read_csv(symbols_data_path)
-    
-    symbols_list = [
-        Symbol(
-            symbol=element[1]['symbol'], 
-            name=element[1]['name'], 
-            is_separator=element[1]['is_sep'], 
-            is_digit=element[1]['is_digit'], 
-            is_character=element[1]['is_char'])
-            
-            for element in symbols_df.iterrows()
-    ]
-
-    return set(symbols_list)
-
-
 if __name__ == '__main__':
 
     symbols = [
@@ -401,10 +383,6 @@ if __name__ == '__main__':
 
     }
 
-
-    # Loading and creating symbols
-    # symbols = load_symbols()
-
     # Creating alphabet from symbols
     alphabet = Alphabet(symbols)   
 
@@ -424,11 +402,3 @@ if __name__ == '__main__':
     while current_token is not None:
         current_token = lexical.get_next_token()
         print(current_token.__str__())
-
-    
-# PENDENTE:
-# Eliminação de espaços
-# Adição de operadores e separadores remanescentes
-# Testes de erros encontrados pelo léxico
-# Criação de tabela de memória auxiliar para identificadores e palavras reservadas
-# Carregamento de símbolos e tokens ao invés de criação no código
