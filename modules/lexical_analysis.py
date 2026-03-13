@@ -381,7 +381,7 @@ if __name__ == '__main__':
     '\n':   'new_line',
     ',':    'comma',
     ';':    'semicolon',
-
+    '_':    'underline',
     }
 
     # Creating alphabet from symbols
