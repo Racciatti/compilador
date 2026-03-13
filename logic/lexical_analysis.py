@@ -203,10 +203,6 @@ class LexicalAnalyzer:
  
     # Update cursor position
 
-    def __is_cursor_at_eof(self):
-        print(f'pos: {self.pos}, max_pos:{self.max_pos}')
-        return self.pos == self.max_pos  
-
     def __cursor_new_line(self):
         self.col=0
         self.lin+=1
