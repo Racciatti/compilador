@@ -137,7 +137,11 @@ class LexicalAnalyzer:
                             self.__cursor_right()
                         
                     # Validate we found the closing brackets
+                    
                     assert self.__get_current_symbol() == '}'
+                    self.__cursor_right()
+                    if self.__get_current_symbol() == '$':
+                        return None
                     
                 # If it is a single line comment, ignore everything until we find a newline character
                 elif self.__get_current_symbol() == '/':
@@ -153,6 +157,10 @@ class LexicalAnalyzer:
                     # Validate we found a new_line character
                     assert self.__get_current_symbol() == '\n'
                     self.__cursor_new_line()
+
+                    if self.__get_current_symbol() == '$':
+                        return None
+                    
 
                 # If we have standard separators
                 elif self.__get_current_symbol() in ['\n', ' ']:
@@ -179,7 +187,12 @@ class LexicalAnalyzer:
             # Then it is a one-symbol token that can be directly returned (',', ';')
             return self.__return_token()
             
-        # If it's not a separator, it's either a digit, a character or a dot
+        # If we have an operator
+        if self.__is_current_symbol_operator():
+            
+            # For now, just return every operator as a one-symbol token
+            return self.__return_token()
+        
         if self.__get_current_symbol() == '.':
             return self.__throw_error_for_current_symbol("ERROR: Unexpected '.'")
 
@@ -272,7 +285,10 @@ class LexicalAnalyzer:
         self.source_code = self.source_code + '$'
         self.max_pos = len(self.source_code) - 1
 
-        print('loaded source: ',self.source_code)
+        print('loaded source: ')
+        print('=' * 80)
+        print(self.source_code)
+        print('=' * 80)
 
     def set_source_code(self, source_code:str):
         self.source_code = source_code + '$'
@@ -303,6 +319,9 @@ class LexicalAnalyzer:
 
     def __is_current_symbol_character(self)->bool:
         return self.alphabet.is_character(self.__get_current_symbol())
+    
+    def __is_current_symbol_operator(self)->bool:
+        return self.alphabet.is_operator(self.__get_current_symbol())
 
     def __is_current_symbol_valid(self)->bool:
         return self.alphabet.contains_symbol(self.__get_current_symbol())
@@ -412,7 +431,7 @@ if __name__ == '__main__':
         Symbol("+", "plus",         'operator'),
         Symbol("-", "minus",        'operator'),
         Symbol("*", "multiplier",   'operator'),
-        Symbol("/", "divider",      'operator'),
+        # Symbol("/", "divider",      'operator'),
         Symbol('(', "open_p",       'operator'),
         Symbol(')', "close_p",      'operator'),
         Symbol(':', "colon",        'operator'),
