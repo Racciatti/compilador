@@ -96,6 +96,8 @@ class LexicalAnalyzer:
         
     def get_next_token(self):
 
+        print('LEXICAL CALLED')
+
         if self.source_code is None:
             raise Exception('Source code was not defined')
 
@@ -103,19 +105,39 @@ class LexicalAnalyzer:
         if self.__get_current_symbol() == '$':
             return None
 
-        # If it doesn't belong to the alphabet
+        # If the current symbol doesn't belong to the alphabet
         if not self.__is_current_symbol_valid():
 
             # Return an error
             return self.__throw_error_for_current_symbol(f'ERROR: Symbol "{self.__get_current_symbol()}" not in alphabet')
         
-        # If it is a separator (!NOTE "is_separator" is being used as what should be "is_unitary". They match for this alphabet, but that is not a gurantee)
+        # We have two types of separators: Those that must be returned as tokens and those that must be ignored
+        # We need to check the ones that need to be ignored first, since we'll move the cursor continuously 
+        # Until we find a token to be returned
+        # If it is a separator that must be ignored
+        if self.__get_current_symbol() == '\n' or self.__get_current_symbol() == ' ':
+            
+            # While we have separators, keep discarding them and moving the cursor 
+            while self.__get_current_symbol() in ['\n', ' ']:
+                
+                if self.__get_current_symbol() == '\n':
+                    print('ignored new_line')    
+                    self.__cursor_new_line()
+            
+                else:
+                    print('ignored space')    
+                    self.__cursor_right()
+
+                if self.__get_current_symbol() == '$':
+                    print('AA')
+                    return None
+
+        # If after the separators that must be ignored we still have a separator
         if self.__is_current_symbol_separator():
 
-            # Check if the current character is indeed a registered token
-            if self.__get_current_symbol() not in list(self.tokens_dict.keys()):
-                raise Exception('Symbol is separator and is in the alphabet, but it is not a key associated to a token')
+            print('branch relevant separator ')
 
+            # Then it is a one-symbol token that can be directly returned (',', ';')
             return self.__return_token()
             
         # If it's not a separator, it's either a digit, a character or a dot
@@ -142,7 +164,6 @@ class LexicalAnalyzer:
 
             value = self.source_code[initial_pos:self.pos + 1]
             return self.__return_token(token_value=value, token_col=initial_col, token_key='id', token_lin=self.lin)
-
 
         # If it starts with a number, it has to be a real number or an integer
         if self.__is_current_symbol_digit():
@@ -203,6 +224,7 @@ class LexicalAnalyzer:
             string = self.source_code[initial_pos, self.pos]
  
     def load_source_code(self, file_path:str = '../source_code.txt'):
+        
         with open(file_path, 'r') as file:
             self.source_code = file.read()
 
@@ -210,6 +232,8 @@ class LexicalAnalyzer:
 
         self.source_code = self.source_code + '$'
         self.max_pos = len(self.source_code) - 1
+
+        print('loaded source: ',self.source_code)
 
     def set_source_code(self, source_code:str):
         self.source_code = source_code + '$'
@@ -268,11 +292,9 @@ class LexicalAnalyzer:
         else: 
             token_name = self.tokens_dict[token_key]
             token = Token(name=token_name, value=token_value, col=token_col, lin=token_lin)
-            
-        if token_value == '\n':
-            self.__cursor_new_line()
-        else:
-            self.__cursor_right()
+
+    
+        self.__cursor_right()
 
         return token
 
@@ -363,6 +385,8 @@ if __name__ == '__main__':
         Symbol(',', "comma",        'separator'),
         Symbol(';', "semicolon",    'separator'),
         Symbol('$', "eof",          'separator'),
+
+        # MISC
         Symbol('.', "dot")
     ]
 
