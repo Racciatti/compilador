@@ -111,26 +111,65 @@ class LexicalAnalyzer:
             # Return an error
             return self.__throw_error_for_current_symbol(f'ERROR: Symbol "{self.__get_current_symbol()}" not in alphabet')
         
-        # We have two types of separators: Those that must be returned as tokens and those that must be ignored
-        # We need to check the ones that need to be ignored first, since we'll move the cursor continuously 
-        # Until we find a token to be returned
-        # If it is a separator that must be ignored
-        if self.__get_current_symbol() == '\n' or self.__get_current_symbol() == ' ':
-            
-            # While we have separators, keep discarding them and moving the cursor 
-            while self.__get_current_symbol() in ['\n', ' ']:
-                
-                if self.__get_current_symbol() == '\n':
-                    print('ignored new_line')    
-                    self.__cursor_new_line()
-            
-                else:
-                    print('ignored space')    
-                    self.__cursor_right()
+        # If it is a symbol that must be ignored (comments or non-token separators)
+        if self.__get_current_symbol() in ['\n', ' ', '/', '{']:
 
-                if self.__get_current_symbol() == '$':
-                    print('AA')
-                    return None
+            # While we run into symbols that must be ignored
+            while self.__get_current_symbol() in ['\n', ' ', '/', '{']:
+
+                # If it is a multiple line comment, ignore everything until we find a closing bracket
+                if self.__get_current_symbol() == '{':
+                    print('ignored multiple line comment')    
+                    
+                    self.__cursor_right()
+                    
+                    while self.__get_current_symbol() != '}':
+                            
+                        # If we reach the end of the file prior to reaching the end of the comment
+                        if self.__get_current_symbol() == '$':
+                            self.__throw_error_for_current_symbol('UNEXPECTED EOF: Expected "}" ')
+                        
+                        # Otherwise, keep moving the cursor
+                        elif self.__get_current_symbol() == '\n':
+                            self.__cursor_new_line()
+                        
+                        else:
+                            self.__cursor_right()
+                        
+                    # Validate we found the closing brackets
+                    assert self.__get_current_symbol() == '}'
+                    
+                # If it is a single line comment, ignore everything until we find a newline character
+                elif self.__get_current_symbol() == '/':
+                    print('ignored single line comment')    
+
+                    while self.__get_current_symbol() != '\n':
+
+                        if self.__get_current_symbol() == '$':
+                            return None
+                        
+                        self.__cursor_right()
+                    
+                    # Validate we found a new_line character
+                    assert self.__get_current_symbol() == '\n'
+                    self.__cursor_new_line()
+
+                # If we have standard separators
+                elif self.__get_current_symbol() in ['\n', ' ']:
+                    
+                    # While we have separators, keep discarding them and moving the cursor 
+                    while self.__get_current_symbol() in ['\n', ' ']:
+                        
+                        if self.__get_current_symbol() == '\n':
+                            print('ignored new_line')    
+                            self.__cursor_new_line()
+                    
+                        else:
+                            print('ignored space')    
+                            self.__cursor_right()
+
+                        if self.__get_current_symbol() == '$':
+                            return None
 
         # If after the separators that must be ignored we still have a separator
         if self.__is_current_symbol_separator():
@@ -380,8 +419,14 @@ if __name__ == '__main__':
         Symbol('=', "equals",       'operator'),
         
         # SEPARATORS
+        # Ignored
         Symbol('\n',"new_line",     'separator'),
         Symbol(' ', "space",        'separator'),
+        Symbol('/', "forward_slash",'separator'),
+        Symbol('{', "open_b",       'separator'),
+        Symbol('}', "close_b",      'separator'),
+
+        # Tokenizeable
         Symbol(',', "comma",        'separator'),
         Symbol(';', "semicolon",    'separator'),
         Symbol('$', "eof",          'separator'),
@@ -408,6 +453,7 @@ if __name__ == '__main__':
     ',':    'comma',
     ';':    'semicolon',
     '_':    'underline',
+    '/':    'forward_slash',
     }
 
     # Creating alphabet from symbols
