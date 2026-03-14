@@ -6,13 +6,12 @@ class Symbol:
     Each symbol (character) has a name and certain properties. 
     """
 
-    def __init__(self, symbol:str, name:str, is_separator:bool=False, is_digit:bool = False, is_character:bool=False):
+    def __init__(self, symbol:str, name:str, symbol_type:str=None):
         self.symbol = symbol
         self.name = name
-        self.properties = {}
-        self.properties['is_separator'] = is_separator
-        self.properties['is_digit'] = is_digit
-        self.properties['is_character'] = is_character
+        if symbol_type not in 'digit character separator operator'.split() + [None]:
+            raise ValueError(f'INVALID SYMBOL TYPE: {symbol_type}')
+        self.type = symbol_type
         
 class Alphabet:
     """
@@ -26,13 +25,16 @@ class Alphabet:
         return symbol in self.existing_symbols
     
     def is_separator(self, symbol:str)->bool:
-        return self.__get_symbol(symbol).properties['is_separator']
+        return self.__get_symbol(symbol).type == 'separator'
 
     def is_digit(self, symbol:str)->bool:
-        return self.__get_symbol(symbol).properties['is_digit']
+        return self.__get_symbol(symbol).type == 'digit'
     
     def is_character(self, symbol:str)->bool:
-        return self.__get_symbol(symbol).properties['is_character']
+        return self.__get_symbol(symbol).type == 'character'
+    
+    def is_operator(self, symbol:str)->bool:
+        return self.__get_symbol(symbol).type == 'operator'
     
     def __get_symbol(self, symbol:str)->Symbol:
         if self.contains_symbol(symbol):
@@ -279,88 +281,88 @@ if __name__ == '__main__':
     symbols = [
         
         # Digits
-        Symbol('0', 'digit_0',      is_digit=True),
-        Symbol('1', 'digit_1',      is_digit=True),
-        Symbol('2', 'digit_2',      is_digit=True),
-        Symbol('3', 'digit_3',      is_digit=True),
-        Symbol('4', 'digit_4',      is_digit=True),
-        Symbol('5', 'digit_5',      is_digit=True),
-        Symbol('6', 'digit_6',      is_digit=True),
-        Symbol('7', 'digit_7',      is_digit=True),
-        Symbol('8', 'digit_8',      is_digit=True),
-        Symbol('9', 'digit_9',      is_digit=True),
+        Symbol('0', 'digit_0',      'digit'),
+        Symbol('1', 'digit_1',      'digit'),
+        Symbol('2', 'digit_2',      'digit'),
+        Symbol('3', 'digit_3',      'digit'),
+        Symbol('4', 'digit_4',      'digit'),
+        Symbol('5', 'digit_5',      'digit'),
+        Symbol('6', 'digit_6',      'digit'),
+        Symbol('7', 'digit_7',      'digit'),
+        Symbol('8', 'digit_8',      'digit'),
+        Symbol('9', 'digit_9',      'digit'),
 
         # Characters
-        Symbol("a", 'character_a',  is_character=True),
-        Symbol("b", 'character_b',  is_character=True),
-        Symbol("c", 'character_c',  is_character=True),
-        Symbol("d", 'character_d',  is_character=True),
-        Symbol("e", 'character_e',  is_character=True),
-        Symbol("f", 'character_f',  is_character=True),
-        Symbol("g", 'character_g',  is_character=True),
-        Symbol("h", 'character_h',  is_character=True),
-        Symbol("i", 'character_i',  is_character=True),
-        Symbol("j", 'character_j',  is_character=True),
-        Symbol("k", 'character_k',  is_character=True),
-        Symbol("l", 'character_l',  is_character=True),
-        Symbol("m", 'character_m',  is_character=True),
-        Symbol("n", 'character_n',  is_character=True),
-        Symbol("o", 'character_o',  is_character=True),
-        Symbol("p", 'character_p',  is_character=True),
-        Symbol("q", 'character_q',  is_character=True),
-        Symbol("r", 'character_r',  is_character=True),
-        Symbol("s", 'character_s',  is_character=True),
-        Symbol("t", 'character_t',  is_character=True),
-        Symbol("u", 'character_u',  is_character=True),
-        Symbol("v", 'character_v',  is_character=True),
-        Symbol("w", 'character_w',  is_character=True),
-        Symbol("x", 'character_x',  is_character=True),
-        Symbol("y", 'character_y',  is_character=True),
-        Symbol("z", 'character_z',  is_character=True),
-        Symbol("A", 'character_A',  is_character=True),
-        Symbol("B", 'character_B',  is_character=True),
-        Symbol("C", 'character_C',  is_character=True),
-        Symbol("D", 'character_D',  is_character=True),
-        Symbol("E", 'character_E',  is_character=True),
-        Symbol("F", 'character_F',  is_character=True),
-        Symbol("G", 'character_G',  is_character=True),
-        Symbol("H", 'character_H',  is_character=True),
-        Symbol("I", 'character_I',  is_character=True),
-        Symbol("J", 'character_J',  is_character=True),
-        Symbol("K", 'character_K',  is_character=True),
-        Symbol("L", 'character_L',  is_character=True),
-        Symbol("M", 'character_M',  is_character=True),
-        Symbol("N", 'character_N',  is_character=True),
-        Symbol("O", 'character_O',  is_character=True),
-        Symbol("P", 'character_P',  is_character=True),
-        Symbol("Q", 'character_Q',  is_character=True),
-        Symbol("R", 'character_R',  is_character=True),
-        Symbol("S", 'character_S',  is_character=True),
-        Symbol("T", 'character_T',  is_character=True),
-        Symbol("U", 'character_U',  is_character=True),
-        Symbol("V", 'character_V',  is_character=True),
-        Symbol("W", 'character_W',  is_character=True),
-        Symbol("X", 'character_X',  is_character=True),
-        Symbol("Y", 'character_Y',  is_character=True),
-        Symbol("Z", 'character_Z',  is_character=True),
-        Symbol("_", 'underline',    is_character=True),
+        Symbol("a", 'character_a',  'character'),
+        Symbol("b", 'character_b',  'character'),
+        Symbol("c", 'character_c',  'character'),
+        Symbol("d", 'character_d',  'character'),
+        Symbol("e", 'character_e',  'character'),
+        Symbol("f", 'character_f',  'character'),
+        Symbol("g", 'character_g',  'character'),
+        Symbol("h", 'character_h',  'character'),
+        Symbol("i", 'character_i',  'character'),
+        Symbol("j", 'character_j',  'character'),
+        Symbol("k", 'character_k',  'character'),
+        Symbol("l", 'character_l',  'character'),
+        Symbol("m", 'character_m',  'character'),
+        Symbol("n", 'character_n',  'character'),
+        Symbol("o", 'character_o',  'character'),
+        Symbol("p", 'character_p',  'character'),
+        Symbol("q", 'character_q',  'character'),
+        Symbol("r", 'character_r',  'character'),
+        Symbol("s", 'character_s',  'character'),
+        Symbol("t", 'character_t',  'character'),
+        Symbol("u", 'character_u',  'character'),
+        Symbol("v", 'character_v',  'character'),
+        Symbol("w", 'character_w',  'character'),
+        Symbol("x", 'character_x',  'character'),
+        Symbol("y", 'character_y',  'character'),
+        Symbol("z", 'character_z',  'character'),
+        Symbol("A", 'character_A',  'character'),
+        Symbol("B", 'character_B',  'character'),
+        Symbol("C", 'character_C',  'character'),
+        Symbol("D", 'character_D',  'character'),
+        Symbol("E", 'character_E',  'character'),
+        Symbol("F", 'character_F',  'character'),
+        Symbol("G", 'character_G',  'character'),
+        Symbol("H", 'character_H',  'character'),
+        Symbol("I", 'character_I',  'character'),
+        Symbol("J", 'character_J',  'character'),
+        Symbol("K", 'character_K',  'character'),
+        Symbol("L", 'character_L',  'character'),
+        Symbol("M", 'character_M',  'character'),
+        Symbol("N", 'character_N',  'character'),
+        Symbol("O", 'character_O',  'character'),
+        Symbol("P", 'character_P',  'character'),
+        Symbol("Q", 'character_Q',  'character'),
+        Symbol("R", 'character_R',  'character'),
+        Symbol("S", 'character_S',  'character'),
+        Symbol("T", 'character_T',  'character'),
+        Symbol("U", 'character_U',  'character'),
+        Symbol("V", 'character_V',  'character'),
+        Symbol("W", 'character_W',  'character'),
+        Symbol("X", 'character_X',  'character'),
+        Symbol("Y", 'character_Y',  'character'),
+        Symbol("Z", 'character_Z',  'character'),
+        Symbol("_", 'underline',    'character'),
 
         # OPERATORS
-        Symbol("+", "plus",         is_separator=True),
-        Symbol("-", "minus",        is_separator=True),
-        Symbol("*", "multiplier",   is_separator=True),
-        Symbol("/", "divider",      is_separator=True),
-        Symbol('(', "open_p",       is_separator=True),
-        Symbol(')', "close_p",      is_separator=True),
+        Symbol("+", "plus",         'operator'),
+        Symbol("-", "minus",        'operator'),
+        Symbol("*", "multiplier",   'operator'),
+        Symbol("/", "divider",      'operator'),
+        Symbol('(', "open_p",       'operator'),
+        Symbol(')', "close_p",      'operator'),
+        Symbol(':', "colon",        'operator'),
+        Symbol('=', "equals",       'operator'),
         
-        # MISC
-        Symbol('\n',"new_line",     is_separator=True),
-        Symbol(' ', "space",        is_separator=True),
-        Symbol(',', "comma",        is_separator=True),
-        Symbol(':', "colon",        is_separator=True),
-        Symbol(';', "semicolon",    is_separator=True),
-        Symbol('=', "equals",       is_separator=True),
-        Symbol('$', "eof",          is_separator=True),
+        # SEPARATORS
+        Symbol('\n',"new_line",     'separator'),
+        Symbol(' ', "space",        'separator'),
+        Symbol(',', "comma",        'separator'),
+        Symbol(';', "semicolon",    'separator'),
+        Symbol('$', "eof",          'separator'),
         Symbol('.', "dot")
     ]
 
