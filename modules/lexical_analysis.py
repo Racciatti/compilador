@@ -3,7 +3,7 @@ import pandas as pd
 class Symbol:
     """
     A symbol is the atomic unit in a language. 
-    Each symbol (character) has a name and certain properties. 
+    Each symbol (character) has a name and a type, which can be any of: "oprator", "separator", "digit", "character"
     """
 
     def __init__(self, symbol:str, name:str, symbol_type:str=None):
@@ -15,7 +15,8 @@ class Symbol:
         
 class Alphabet:
     """
-    An alphabet is defined by a set of symbols.
+    An alphabet is defined by a set of symbols. 
+    Additionally, it contains methods that validate the type of symbols and their existence in order to make the code less verbose 
     """
     def __init__(self, symbols:set):
         self.symbols = {symbol.symbol : symbol for symbol in symbols} # Dict structure with symbol.symbol as key and symbol object as value
@@ -51,8 +52,10 @@ class Alphabet:
 
 class Token:    
     """
-    A token is formed by one or more symbols. 
-    Valid tokens can be joined in order to form higher level abstractions. 
+    A token can be formed by one or more symbols, it is the atomic unit extracted from the source code,
+    from a lexical perspective.
+
+    Each token has a name, value, and the position in which it was found in the source code (col, lin)  
     """
     
     def __init__(self, name:str, value:str, col:int, lin:int):
@@ -66,10 +69,13 @@ class Token:
         return f"""
                 token name: {self.name}
                 token value:{self.value}
-                token pos: {self.lin, self.col}
+                token pos: {self.col, self.lin}
                 """
         
 class LexicalAnalyzer:
+    """
+    Documentation pending !!!
+    """
 
     def __init__(self, alphabet:Alphabet, tokens_dict:dict):
         
@@ -311,7 +317,6 @@ class LexicalAnalyzer:
         self.source_code = source_code + '$'
         self.max_pos = len(self.source_code) - 1
 
-
     # Update cursor position
     def __cursor_new_line(self):
         self.col=0
@@ -328,22 +333,31 @@ class LexicalAnalyzer:
         self.pos-=1
         self.col-=1
 
+    # Check symbol type
     def __is_current_symbol_digit(self)->bool:
         return self.alphabet.is_digit(self.__get_current_symbol())
         
+    # Check symbol type
     def __is_current_symbol_separator(self)->bool:
         return self.alphabet.is_separator(self.__get_current_symbol())
 
+    # Check symbol type
     def __is_current_symbol_character(self)->bool:
         return self.alphabet.is_character(self.__get_current_symbol())
     
+    # Check symbol type
     def __is_current_symbol_operator(self)->bool:
         return self.alphabet.is_operator(self.__get_current_symbol())
 
+    # Validate symbols' existence
     def __is_current_symbol_valid(self)->bool:
         return self.alphabet.contains_symbol(self.__get_current_symbol())
 
+    # Return the symbol under the cursor
     def __get_current_symbol(self)->str:
+        """
+        Returns the symbol under the cursor
+        """
         return self.source_code[self.pos]
 
     # We'll probably need something more elaborate here, so the method has already been created
@@ -352,7 +366,8 @@ class LexicalAnalyzer:
 
     def __return_token(self, token_value:str = None, token_col:int = None, token_lin:int = None, token_key:str = None):
         """
-        Use the symbol under the cursor or passed arguments to create a token and return it, whilst also moving the cursor.
+        Use the symbol under the cursor or passed arguments to create a token and return it, 
+        whilst also moving the cursor.
         """
 
         # If the token key is merely the symbol in which the cursor is on right now, set token attributes based on cursor position
@@ -379,6 +394,7 @@ class LexicalAnalyzer:
 
 if __name__ == '__main__':
 
+    # Create the symbols of the language
     symbols = [
         
         # Digits
@@ -482,6 +498,7 @@ if __name__ == '__main__':
         # Symbol("/", "divider",      'operator'),
     ]
 
+    # Define a hash table for associating symbols to token names easily
     tokens_dict ={
     '+':    'op_sum',
     '-':    'op_sub', 
