@@ -189,10 +189,27 @@ class LexicalAnalyzer:
             
         # If we have an operator
         if self.__is_current_symbol_operator():
-            
-            # For now, just return every operator as a one-symbol token
+
+            # If it can be a token that allows for more than one symbol in the operator
+            if self.__get_current_symbol() in ['<', ':', '>']:
+
+                # If the next symbol is also an operator
+                self.__cursor_right()
+                if self.__is_current_symbol_operator():
+
+                    # Check if that is indeed a two-symbol operator
+                    if self.source_code[self.pos-1:self.pos+1] in list(self.tokens_dict.keys()):
+
+                        # If it is, return its token
+                        return self.__return_token(token_key=self.source_code[self.pos-1:self.pos+1])
+                    
+                else:
+                    self.__cursor_left()
+
+            # Otherwise, return the first symbol's token    
             return self.__return_token()
-        
+            
+
         if self.__get_current_symbol() == '.':
             return self.__throw_error_for_current_symbol("ERROR: Unexpected '.'")
 
@@ -349,7 +366,11 @@ class LexicalAnalyzer:
         
         else: 
             token_name = self.tokens_dict[token_key]
-            token = Token(name=token_name, value=token_value, col=token_col, lin=token_lin)
+            col = self.col if token_col is None else token_col
+            lin = self.lin if token_lin is None else token_lin
+            value = self.tokens_dict[token_key] if token_value is None else token_value
+            
+            token = Token(name=token_name, value=value, col=col, lin=lin)
 
     
         self.__cursor_right()
@@ -428,14 +449,18 @@ if __name__ == '__main__':
         Symbol("_", 'underline',    'character'),
 
         # OPERATORS
+        # Arithmetic
         Symbol("+", "plus",         'operator'),
         Symbol("-", "minus",        'operator'),
         Symbol("*", "multiplier",   'operator'),
-        # Symbol("/", "divider",      'operator'),
+
+        # Relational
+        Symbol('=', "equals",       'operator'),
+        Symbol('<', "left_arrow",   'operator'),
+        Symbol('>', "right_arrow",  'operator'),
         Symbol('(', "open_p",       'operator'),
         Symbol(')', "close_p",      'operator'),
         Symbol(':', "colon",        'operator'),
-        Symbol('=', "equals",       'operator'),
         
         # SEPARATORS
         # Ignored
@@ -452,6 +477,9 @@ if __name__ == '__main__':
 
         # MISC
         Symbol('.', "dot")
+
+        # Eliminated
+        # Symbol("/", "divider",      'operator'),
     ]
 
     tokens_dict ={
@@ -473,6 +501,12 @@ if __name__ == '__main__':
     ';':    'semicolon',
     '_':    'underline',
     '/':    'forward_slash',
+    '<':    'smt',
+    '>':    'get',
+    '>=':   'geq',
+    '<=':   'seq',
+    '<>':   'diff',
+    ':=':   'attr',
     }
 
     # Creating alphabet from symbols
