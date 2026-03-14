@@ -127,7 +127,7 @@ class LexicalAnalyzer:
                             
                         # If we reach the end of the file prior to reaching the end of the comment
                         if self.__get_current_symbol() == '$':
-                            self.__throw_error_for_current_symbol('UNEXPECTED EOF: Expected "}" ')
+                            return self.__throw_error_for_current_symbol('UNEXPECTED EOF: Expected "}" ')
                         
                         # Otherwise, keep moving the cursor
                         elif self.__get_current_symbol() == '\n':
