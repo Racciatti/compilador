@@ -1,35 +1,39 @@
 import streamlit as st
 import pandas as pd
-from modules.lexical_analysis import analyze_text
+import modules.utils as ut
 
-st.set_page_config("Calculadora", layout="centered")
 
-st.title("Calculadora para análise léxica")
+st.set_page_config(
+    "Analisador léxico", 
+    layout="centered"
+)
+
+st.title("Analisador léxico")
 
 st.markdown(
     """
-    Essa é uma aplicação para análise léxica de uma calculadora simples.
-    Ela não é feita para solucionar contas matemáticas, mas sim para averiguar
-    a estrutura de um programa, como o alfabeto utilizado e os erros encontrados.
-
-    **Alfabeto válido:** dígitos `0–9` e os operadores `+ - * / . ( ) espaço`
+        Interface para inspecionar tokens e erros gerados pelo analisador léxico atual.
+        O código é interpretado conforme o alfabeto definido pela BNF, isto é:
+        inclui-se dígitos, letras, `_`, operadores, separadores e comentários.
     """
 )
 
-# Entrada 
+st.caption("Comentários de linha usam `/...` até a quebra de linha e comentários de bloco usam `{...}`.")
+
+# Entrada
 selection = st.pills(
     label="Modo de entrada",
     options=["Inserir texto", "Enviar arquivo .txt"],
     label_visibility="hidden",
 )
 
-texto_bruto: str | None = None
+texto_bruto = None
 
 if selection == "Inserir texto":
     texto_bruto = st.text_area(
-        label="Digite sua expressão",
-        placeholder="Ex: (12 + 3.5) * 2\nPara enviar aperte CTRL+ENTER",
-        height=120,
+        label="Digite o código-fonte",
+        placeholder="Ex:\nvar1 := 10\n{ comentario }\nwrite(var1)",
+        height=180,
     )
 elif selection == "Enviar arquivo .txt":
     arquivo = st.file_uploader("Enviar arquivo (APENAS .TXT)", type="txt")
@@ -39,7 +43,7 @@ elif selection == "Enviar arquivo .txt":
 # Botão para analisar
 analisar = st.button("Analisar", use_container_width=True)
 
-# Resultado 
+# Resultado
 col_analise, col_erros = st.columns(2)
 
 with col_analise:
@@ -52,7 +56,11 @@ if analisar:
     if not texto_bruto or not texto_bruto.strip():
         st.warning("Insira um texto ou envie um arquivo antes de analisar.")
     else:
-        tokens, erros = analyze_text(texto_bruto)
+        tokens, erros = ut.analyze_source(texto_bruto)
+
+        total_tokens, total_erros = st.columns(2)
+        total_tokens.metric("Tokens", len(tokens))
+        total_erros.metric("Erros", len(erros))
 
         with col_analise:
             if tokens:
