@@ -15,7 +15,7 @@ TOKENS_DICT = {
     ")": "close_p",
     ":": "colon",
     "\n": "new_line",
-    ",": "comma",
+    ## excluir a vírgula? assim evita que ele lê números reais com "," e só considere inteiros
     ";": "semicolon",
     "_": "underline",
     "<": "smt",
@@ -31,7 +31,7 @@ DISPLAY_LEXEMES = {value: key for key, value in TOKENS_DICT.items() if len(key) 
 
 def build_alphabet():
     """
-    
+        All the valid characters and thers respective tokens
     """
     symbols = [
         *(Symbol(str(number), f"digit_{number}", "digit") for number in range(10)), # o * é um empacotador (pra diminuir o tamanho do código)
@@ -51,8 +51,8 @@ def build_alphabet():
         Symbol(" ", "space", "separator"),
         Symbol("/", "forward_slash", "separator"),
         Symbol("{", "open_b", "separator"),
+        ## excluir vírgula
         Symbol("}", "close_b", "separator"),
-        Symbol(",", "comma", "separator"),
         Symbol(";", "semicolon", "separator"),
         Symbol("$", "eof", "separator"),
         Symbol(".", "dot"),
@@ -61,7 +61,8 @@ def build_alphabet():
 
 
 def serialize_token(token: Token):
-    """"
+    """
+        
     """
     lexeme = DISPLAY_LEXEMES.get(token.value, token.value)
     return {
@@ -84,7 +85,8 @@ def serialize_error(message: str):
 
 def analyze_source(source_code: str):
     """
-    FUNCTION TO CONnECT
+    
+    (FUNCTION TO CONnECT)
     """
     analyzer = LexicalAnalyzer(build_alphabet(), tokens_dict=TOKENS_DICT)
     analyzer.set_source_code(source_code)

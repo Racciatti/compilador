@@ -31,7 +31,7 @@ texto_bruto = None
 
 if selection == "Inserir texto":
     texto_bruto = st.text_area(
-        label="Digite o código-fonte",
+        label="Digite o código-fonte, para números reais, escreva com ponto(.) e não vírgula (,)",
         placeholder="Ex:\nvar1 := 10\n{ comentario }\nwrite(var1)",
         height=180,
     )
@@ -41,7 +41,7 @@ elif selection == "Enviar arquivo .txt":
         texto_bruto = arquivo.read().decode("utf-8")
 
 # Botão para analisar
-analisar = st.button("Analisar", use_container_width=True)
+analisar = st.button("Analisar", width="content")
 
 # Resultado
 col_analise, col_erros = st.columns(2)

@@ -1,5 +1,3 @@
-import pandas as pd
-
 class Symbol:
     """
     A symbol is the atomic unit in a language. 
@@ -67,9 +65,9 @@ class Token:
     def __str__(self):
 
         return f"""
-                token name: {self.name}
+                token name:{self.name}
                 token value:{self.value}
-                token pos: {self.col, self.lin}
+                token pos:{self.col, self.lin}
                 """
         
 class LexicalAnalyzer:
