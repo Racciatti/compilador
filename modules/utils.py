@@ -133,37 +133,10 @@ ALPHABET_SYMBOLS = [
 DISPLAY_LEXEMES = {value: key for key, value in TOKENS_DICT.items() if len(key) > 1}
 
 
-def build_alphabet():
-    """
-        All the valid characters and thers respective tokens
-    """
-    symbols = [
-        *(Symbol(str(number), f"digit_{number}", "digit") for number in range(10)), # o * é um empacotador (pra diminuir o tamanho do código)
-        *(Symbol(letter, f"character_{letter}", "character") for letter in "abcdefghijklmnopqrstuvwxyz"),
-        *(Symbol(letter, f"character_{letter}", "character") for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
-        Symbol("_", "underline", "character"),
-        Symbol("+", "plus", "operator"),
-        Symbol("-", "minus", "operator"),
-        Symbol("*", "multiplier", "operator"),
-        Symbol("=", "equals", "operator"),
-        Symbol("<", "left_arrow", "operator"),
-        Symbol(">", "right_arrow", "operator"),
-        Symbol("(", "open_p", "operator"),
-        Symbol(")", "close_p", "operator"),
-        Symbol(":", "colon", "operator"),
-        Symbol("\n", "new_line", "separator"),
-        Symbol(" ", "space", "separator"),
-        Symbol("/", "forward_slash", "separator"),
-        Symbol("{", "open_b", "separator"),
-        ## excluir vírgula
-        Symbol("}", "close_b", "separator"),
-        Symbol(";", "semicolon", "separator"),
-        Symbol("$", "eof", "separator"),
-        Symbol(".", "dot"),
-    ]
-    return Alphabet(symbols)
+def build_alphabet() -> Alphabet:
+    return Alphabet(symbols=ALPHABET_SYMBOLS)
 
-
+# ! What is this for?
 def serialize_token(token: Token):
     """
         
@@ -176,7 +149,7 @@ def serialize_token(token: Token):
         "coluna": token.col + 1,
     }
 
-
+# ! What is this for?
 def serialize_error(message: str):
     """
     """
@@ -189,8 +162,7 @@ def serialize_error(message: str):
 
 def analyze_source(source_code: str):
     """
-    
-    (FUNCTION TO CONnECT)
+    Builds the lexical analyzer and sets the source code to be analyzed
     """
     analyzer = LexicalAnalyzer(build_alphabet(), tokens_dict=TOKENS_DICT)
     analyzer.set_source_code(source_code)
