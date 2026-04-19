@@ -1,4 +1,4 @@
-from lexical import Symbol, Alphabet, Token, LexicalAnalyzer
+from utils import build_alphabet
 
 
 if __name__ == '__main__':
