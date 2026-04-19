@@ -1,4 +1,4 @@
-from modules.lexical_analysis import Alphabet, LexicalAnalyzer, Symbol, Token
+from lexical import Alphabet, LexicalAnalyzer, Symbol, Token
 
 TOKENS_DICT = {
     "+": "op_sum",
