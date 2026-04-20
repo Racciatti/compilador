@@ -132,8 +132,7 @@ ALPHABET_SYMBOLS = [
 ]
 
 KEYWORD_IDENTIFIERS = ['program','procedure','begin','end','read','write','var','if','then','else','while','do','int','boolean','true','false','not','and','or']
-
-    
+ 
 DISPLAY_LEXEMES = {value: key for key, value in TOKENS_DICT.items() if len(key) > 1}
 
 
@@ -146,6 +145,8 @@ def build_symbolic_table()->SymbolicTable:
 
     return SymbolicTable(elements)
 
+def build_lexical()->LexicalAnalyzer:
+    return LexicalAnalyzer(alphabet=build_alphabet(), tokens_dict=TOKENS_DICT, symbolic_table=build_symbolic_table())
 
 # ! What is this for?
 def serialize_token(token: Token):
@@ -169,7 +170,6 @@ def serialize_error(message: str):
         "linha": None,
         "coluna": None,
     }
-
 
 def analyze_source(source_code: str):
     """

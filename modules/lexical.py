@@ -196,7 +196,7 @@ class LexicalAnalyzer:
 
             # If keyword, return the token
             if self.symbolic_table.is_keyword(value):
-                return self.__return_token(token_value=None, token_col=initial_col, token_key='key', token_lin=self.lin)
+                return self.__return_token(token_value=value, token_col=initial_col, token_key='key', token_lin=self.lin)
             
             # Otherwise, return an identifier token
             return self.__return_token(token_value=value, token_col=initial_col, token_key='id', token_lin=self.lin)

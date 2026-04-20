@@ -56,16 +56,3 @@ class SymbolicTable:
                 return True
             
         return False
-
-    
-    
-
-
-if __name__ == '__main__':
-    keyword_identifiers = ['program','procedure','begin','end','read','write','var','if','then','else','while','do','int','boolean','true','false','not','and','or']
-
-    elements = [Element(element_type='keyword', identifier=id) for id in keyword_identifiers]
-
-    table = SymbolicTable(elements)
-
-
