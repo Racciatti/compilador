@@ -55,8 +55,6 @@ class LexicalAnalyzer:
         
     def get_next_token(self):
 
-        print('LEXICAL CALLED')
-
         if self.source_code is None:
             raise Exception('Source code was not defined')
 
@@ -78,7 +76,6 @@ class LexicalAnalyzer:
 
                 # If it is a multiple line comment, ignore everything until we find a closing bracket
                 if self.__get_current_symbol() == '{':
-                    print('ignored multiple line comment')    
                     
                     self.__cursor_right()
                     
@@ -104,7 +101,7 @@ class LexicalAnalyzer:
                     
                 # If it is a single line comment, ignore everything until we find a newline character
                 elif self.__get_current_symbol() == '/':
-                    print('ignored single line comment')    
+
 
                     while self.__get_current_symbol() != '\n':
 
@@ -128,11 +125,9 @@ class LexicalAnalyzer:
                     while self.__get_current_symbol() in ['\n', ' ']:
                         
                         if self.__get_current_symbol() == '\n':
-                            print('ignored new_line')    
                             self.__cursor_new_line()
                     
                         else:
-                            print('ignored space')    
                             self.__cursor_right()
 
                         if self.__get_current_symbol() == '$':
@@ -140,8 +135,6 @@ class LexicalAnalyzer:
 
         # If after the separators that must be ignored we still have a separator
         if self.__is_current_symbol_separator():
-
-            print('branch relevant separator ')
 
             # Then it is a one-symbol token that can be directly returned (',', ';')
             return self.__return_token()
@@ -160,7 +153,7 @@ class LexicalAnalyzer:
                     if self.source_code[self.pos-1:self.pos+1] in list(self.tokens_dict.keys()):
 
                         # If it is, return its token
-                        return self.__return_token(token_key=self.source_code[self.pos-1:self.pos+1])
+                        return self.__return_token(token_key=self.source_code[self.pos-1:self.pos+1], token_value=self.source_code[self.pos-1:self.pos+1])
                     
                 else:
                     self.__cursor_left()

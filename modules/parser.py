@@ -12,68 +12,71 @@ class RSP():
 
     def test_parse_program(self):
 
-        while self.current_token is not None:
+        while True:
 
             self.current_token = self.lexical.get_next_token()
 
-            print(self.current_token.__str__)
+            print(self.current_token.__str__())
 
-    def parse_program(self):
+            if self.current_token is None:
+                return
 
-        token = self.lexical.get_next_token()
+    # def parse_program(self):
 
-        if token.value is not 'program':
-            # RAISE OR RETURN ERROR
-            pass
+    #     token = self.lexical.get_next_token()
 
-        token = self.lexical.get_next_token()
+    #     if token.value is not 'program':
+    #         # RAISE OR RETURN ERROR
+    #         pass
 
-        if token is not ID:
-            # RAISE OR RETURN ERROR
-            pass
+    #     token = self.lexical.get_next_token()
+
+    #     if token is not ID:
+    #         # RAISE OR RETURN ERROR
+    #         pass
         
-        token = self.lexical.get_next_token()
+    #     token = self.lexical.get_next_token()
 
-        if token.value != ';':
-            # RAISE OR RETURN ERROR
-            pass
+    #     if token.value != ';':
+    #         # RAISE OR RETURN ERROR
+    #         pass
 
-        self.parse_block() # VALIDATE ALL WENT WELL ------------------------ SLEF>USE_CACHED_TOKEN. AST? PANIC? 
+    #     self.parse_block() # VALIDATE ALL WENT WELL ------------------------ SLEF>USE_CACHED_TOKEN. AST? PANIC? 
 
-        token = self.lexical.get_next_token()
+    #     token = self.lexical.get_next_token()
 
-        if token.value != '.':
-            # RAISE OR RETURN ERROR
-            pass
+    #     if token.value != '.':
+    #         # RAISE OR RETURN ERROR
+    #         pass
     
-        return True
+    #     return True
         
         
 
-    def parse_block(self):
+    # def parse_block(self):
 
-        token = self.lexical.get_next_token()
+    #     token = self.lexical.get_next_token()
 
-        if token.value == 'procedure':
-            self.parse_subroutine_declaration()
+    #     if token.value == 'procedure':
+    #         self.parse_subroutine_declaration()
 
 
     
-    def parse_subr_dec(self):
+    # def parse_subr_dec(self):
 
-        self.parse_proc_dec(self)
+    #     self.parse_proc_dec(self)
 
 
-    def parse_proc_dec(self):
+    # def parse_proc_dec(self):
 
-        # PRESUMED TO HAVE CONSUMED 'procedure'
+    #     # PRESUMED TO HAVE CONSUMED 'procedure'
 
-        token = self.lexical.get_next_token()
+    #     token = self.lexical.get_next_token()
 
-        if self.token is not ID:
-            pass
+    #     if self.token is not ID:
+    #         pass
 
-        self.parse_proc_dec_1()
+    #     self.parse_proc_dec_1()
         
 
 
