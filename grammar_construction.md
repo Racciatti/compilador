@@ -228,7 +228,7 @@ Since numbers, IDs and letters are treated as atomic tokens, we do not need to u
 
 **Result:**
 
-1 S $\rightarrow$ program ID;BLOCK
+1 S $\rightarrow$ program ID;BLOCK.
 
 2 BLOCK $\rightarrow$ VAR_DEC_SECTION SUBR_DEC_SECTION COMP_COMMAND | SUBR_DEC_SECTION COMP_COMMAND | COMP_COMMAND
 
@@ -240,7 +240,7 @@ Since numbers, IDs and letters are treated as atomic tokens, we do not need to u
 
 5.1 ID_LIST $\rightarrow$ ID ID_LIST_1
 
-5.2 ID_LIST_1 $\rightarrow$ ,ID_LIST_1 | $\epsilon$ 
+5.2 ID_LIST_1 $\rightarrow$ ,ID ID_LIST_1 | $\epsilon$ 
 
 6 SUBR_DEC_SECTION $\rightarrow$ PROC_DEC; SUBR_DEC_SECTION | $\epsilon$
 
@@ -280,7 +280,7 @@ Since numbers, IDs and letters are treated as atomic tokens, we do not need to u
 
 20 FACTOR $\rightarrow$ VAR | NUM | (EXPR) | not FACTOR
 
-21 VAR $\rightarrow$ ID | ID EXPR
+21 VAR $\rightarrow$ ID | ID [EXPR]
 
 22.1 EXPR_LIST $\rightarrow$ EXPR EXPR_LIST_1
 
