@@ -37,7 +37,7 @@ Since the constraints imposed by the RSP on the grammar are for it to be LL(1), 
 
 8 <formal_params> ::= (<formal_params_section> {;<formal_params_section>})
 
-9 <formal_params_section> ::= [var] <id_list> : <id>
+9 <formal_params_section> ::= [var] <id_list> : <id> // var is a sequence of symbols, not a non terminal
 
 10 <comp_command> ::= begin <command> {; <command>} end
 
@@ -138,7 +138,7 @@ Since the constraints imposed by the RSP on the grammar are for it to be LL(1), 
 9 <formal_params_section> ::= [var] <id_list> : <id>
 ```
 
-9 FORMAL_PARAMS_SECTION $\rightarrow$ VAR ID_LIST : ID | ID_LIST : ID
+9 FORMAL_PARAMS_SECTION $\rightarrow$ var ID_LIST : ID | ID_LIST : ID
 
 ```
 10 <comp_command> ::= begin <command> {; <command>} end
@@ -250,7 +250,7 @@ Since numbers, IDs and letters are treated as atomic tokens, we do not need to u
 
 8.2 FORMAL_PARAMS_1 $\rightarrow$ ;FORMAL_PARAMS_SECTION FORMAL_PARAMS_1 | $\epsilon$ 
 
-9 FORMAL_PARAMS_SECTION $\rightarrow$ VAR ID_LIST : ID | ID_LIST : ID
+9 FORMAL_PARAMS_SECTION $\rightarrow$ var ID_LIST : ID | ID_LIST : ID
 
 10.1 COMP_COMMAND $\rightarrow$ begin COMMAND COMP_COMMAND_1 end
 
@@ -285,3 +285,125 @@ Since numbers, IDs and letters are treated as atomic tokens, we do not need to u
 22.1 EXPR_LIST $\rightarrow$ EXPR EXPR_LIST_1
 
 22.2 EXPR_LIST_1 $\rightarrow$ , EXPR EXPR_LIST_1 | $\epsilon$
+
+### Eliminating indirect and immediate left recursion
+
+After building a complete integrated graph of the grammar, verified there is no indirect left recursion nor immediate left recursion.
+
+### Left-factoring the grammar
+
+**Not left-factored:**
+7 PROC_DEC $\rightarrow$ procedure ID; BLOCK | procedure ID FORMAL_PARAMS; BLOCK
+
+**Solution:**
+7 PROC_DEC $\rightarrow$ procedure ID PROC_DEC_1; BLOCK
+7.1 PROC_DEC_1 $\rightarrow$ FORMAL_PARAMS | e
+
+
+**Not left-factored:**
+11 COMMAND $\rightarrow$ ATTR | PROC_CALL | COMP_COMMAND | COND_COMMAND | ITER_COMMAND
+21 VAR $\rightarrow$ ID | ID [EXPR]
+13 PROC_CALL $\rightarrow$ ID | ID(EXPR_LIST)
+
+**Solution:**
+These will be approached together, since by Leftmost-derivation we have:
+
+COMMAND $\rightarrow$ ATTR $\rightarrow$ VAR $\rightarrow$ ID
+COMMAND $\rightarrow$ PROC_CALL $\rightarrow$ ID
+
+That is to say, with this grammar there is no way that when reading the next symbol we known which production rule to match.
+
+Therefore: 
+
+11 COMMAND $\rightarrow$ ID CMD_ATTR_TAIL | COMP_COMMAND | COND_COMMAND | ITER_COMMAND
+11.1 CMD_ATTR_TAIL $\rightarrow$ ATTR_TAIL | PROC_CALL_TAIL
+12 ATTR_TAIL $\rightarrow$ := EXPR | [ EXPR ] := EXPR
+13 PROC_CALL_TAIL $\rightarrow$ ( EXPR_LIST ) | $\epsilon$
+
+**Not left-factored:**
+21 VAR $\rightarrow$ ID | ID [EXPR]
+
+**Solution:**
+21 VAR $\rightarrow$ ID VAR_TAIL
+21.1 VAR_TAIL $\rightarrow$ [ EXPR ] | $\epsilon$
+
+**Not left-factored:**
+14 COND_COMMAND $\rightarrow$ if EXPR then COMMAND | if EXPR then COMMAND else COMMAND
+
+**Solution:**
+14.1 COND_COMMAND $\rightarrow$ if EXPR then COMMAND COND_COMMAND_1
+14.2 COND_COMMAND_1 $\rightarrow$ else COMMAND | $\epsilon$
+
+
+**Not left-factored:**
+16 EXPR $\rightarrow$ SIMPLE_EXPR | SIMPLE_EXPR REL SIMPLE_EXPR
+
+**Solution:**
+16.1 EXPR $\rightarrow$ SIMPLE_EXPR EXPR_1
+16.2 EXPR_1 $\rightarrow$ REL SIMPLE_EXPR | $\epsilon$
+
+### Final grammar to be implemented
+
+1 S $\rightarrow$ program ID;BLOCK.
+
+2 BLOCK $\rightarrow$ VAR_DEC_SECTION SUBR_DEC_SECTION COMP_COMMAND | SUBR_DEC_SECTION COMP_COMMAND
+
+3.1 VAR_DEC_SECTION $\rightarrow$ VAR_DEC;VAR_DEC_SECTION_1
+
+3.2 VAR_DEC_SECTION_1 $\rightarrow$ VAR_DEC;VAR_DEC_SECTION_1 | $\epsilon$
+
+4 VAR_DEC $\rightarrow$ TYPE ID_LIST
+
+5.1 ID_LIST $\rightarrow$ ID ID_LIST_1
+
+5.2 ID_LIST_1 $\rightarrow$ ,ID ID_LIST_1 | $\epsilon$ 
+
+6 SUBR_DEC_SECTION $\rightarrow$ PROC_DEC; SUBR_DEC_SECTION | $\epsilon$
+
+7 PROC_DEC $\rightarrow$ procedure ID PROC_DEC_1; BLOCK
+7.1 PROC_DEC_1 $\rightarrow$ FORMAL_PARAMS | $\epsilon$
+
+8.1 FORMAL_PARAMS $\rightarrow$ (FORMAL_PARAMS_SECTION FORMAL_PARAMS_1)
+
+8.2 FORMAL_PARAMS_1 $\rightarrow$ ;FORMAL_PARAMS_SECTION FORMAL_PARAMS_1 | $\epsilon$ 
+
+9 FORMAL_PARAMS_SECTION $\rightarrow$ var ID_LIST : ID | ID_LIST : ID
+
+10.1 COMP_COMMAND $\rightarrow$ begin COMMAND COMP_COMMAND_1 end
+
+10.2 COMP_COMMAND_1 $\rightarrow$ ;COMMAND COMP_COMMAND_1 | \epsilon 
+
+11 COMMAND $\rightarrow$ ID CMD_ATTR_TAIL | COMP_COMMAND | COND_COMMAND | ITER_COMMAND
+11.1 CMD_ATTR_TAIL $\rightarrow$ ATTR_TAIL | PROC_CALL_TAIL
+
+12 ATTR_TAIL $\rightarrow$ := EXPR | [ EXPR ] := EXPR
+
+13 PROC_CALL_TAIL $\rightarrow$ ( EXPR_LIST ) | $\epsilon$
+
+14.1 COND_COMMAND $\rightarrow$ if EXPR then COMMAND COND_COMMAND_1
+14.2 COND_COMMAND_1 $\rightarrow$ else COMMAND | $\epsilon$
+
+15 ITER_COMMAND $\rightarrow$ while EXPR do COMMAND
+
+16.1 EXPR $\rightarrow$ SIMPLE_EXPR EXPR_1
+16.2 EXPR_1 $\rightarrow$ REL SIMPLE_EXPR | $\epsilon$
+
+17 REL $\rightarrow$ = | <> | < | <= | >= | >
+
+18.1 SIMPLE_EXPR $\rightarrow$ TERM SIMPLE_EXPR_1 | + TERM SIMPLE_EXPR_1 | -TERM SIMPLE_EXPR_1
+
+18.2 SIMPLE_EXPR_1 $\rightarrow$ + TERM SIMPLE_EXPR_1 | -TERM SIMPLE_EXPR_1 | or TERM SIMPLE_EXPR_1 | $\epsilon$
+
+19.1 TERM $\rightarrow$ FACTOR TERM_1
+
+19.2 TERM_1 $\rightarrow$ * FACTOR TERM_1 | div FACTOR TERM_1 | and FACTOR TERM_1 | $\epsilon$ 
+
+20 FACTOR $\rightarrow$ VAR | NUM | (EXPR) | not FACTOR
+
+21 VAR $\rightarrow$ ID VAR_TAIL
+21.1 VAR_TAIL $\rightarrow$ [ EXPR ] | $\epsilon$
+
+22.1 EXPR_LIST $\rightarrow$ EXPR EXPR_LIST_1
+
+22.2 EXPR_LIST_1 $\rightarrow$ , EXPR EXPR_LIST_1 | $\epsilon$
+
