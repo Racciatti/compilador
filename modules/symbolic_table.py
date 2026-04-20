@@ -1,5 +1,5 @@
 # Do material:
-# "A tabela de símbolos é utilizada para diferenciar palavaras e símbolos reservados 
+# "A tabela de símbolos é utilizada para diferenciar palavras e símbolos reservados 
 # da linguagem de identificadores definidos pelo usuário"
 
 
@@ -47,11 +47,22 @@ class SymbolicTable:
         if self.elements.pop(identifier) is None:
             raise Exception(f'ERROR: Identifier {identifier} tried to be removed but it does not exist')
     
+    def is_keyword(self, identifier:str)->bool:
+
+        if identifier in self.elements:
+
+            if self.elements[identifier].identifier == identifier:
+
+                return True
+            
+        return False
+
+    
     
 
 
 if __name__ == '__main__':
-    keyword_identifiers = ['program','procedure','begin','end','read','write','var','if','then','else','while','do','int','boolean','true','false','not','and','or',]
+    keyword_identifiers = ['program','procedure','begin','end','read','write','var','if','then','else','while','do','int','boolean','true','false','not','and','or']
 
     elements = [Element(element_type='keyword', identifier=id) for id in keyword_identifiers]
 
