@@ -1,4 +1,5 @@
 from lexical import Alphabet, LexicalAnalyzer, Symbol, Token
+from symbolic_table import SymbolicTable, Element
 
 TOKENS_DICT = {
     '+':    'op_sum',
@@ -130,11 +131,21 @@ ALPHABET_SYMBOLS = [
         # Symbol("/", "divider",      'operator'),
 ]
 
+KEYWORD_IDENTIFIERS = ['program','procedure','begin','end','read','write','var','if','then','else','while','do','int','boolean','true','false','not','and','or']
+
+    
 DISPLAY_LEXEMES = {value: key for key, value in TOKENS_DICT.items() if len(key) > 1}
 
 
 def build_alphabet() -> Alphabet:
     return Alphabet(symbols=ALPHABET_SYMBOLS)
+
+def build_symbolic_table()->SymbolicTable:
+
+    elements = [Element(element_type='keyword', identifier=id) for id in KEYWORD_IDENTIFIERS]
+
+    return SymbolicTable(elements)
+
 
 # ! What is this for?
 def serialize_token(token: Token):
