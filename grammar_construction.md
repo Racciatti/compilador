@@ -407,3 +407,7 @@ Therefore:
 
 22.2 EXPR_LIST_1 $\rightarrow$ , EXPR EXPR_LIST_1 | $\epsilon$
 
+
+### Parse Tree Construction
+
+The diagram of the parse tree can be found [here](https://drive.google.com/file/d/1yM4W8BbnQnEWT7n8Iet3ZEi_OKkLF-tp/view?usp=sharing)
