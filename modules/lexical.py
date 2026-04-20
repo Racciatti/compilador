@@ -1,5 +1,5 @@
 from grammar import Alphabet, Symbol
-
+from symbolic_table import SymbolicTable
 
 class Token:    
     """
@@ -28,8 +28,10 @@ class LexicalAnalyzer:
     Documentation pending !!!
     """
 
-    def __init__(self, alphabet:Alphabet, tokens_dict:dict):
+    def __init__(self, alphabet:Alphabet, tokens_dict:dict, symbolic_table:SymbolicTable):
         
+        self.symbolic_table = symbolic_table
+
         # Store tokens as a dict for quick comparison and access. 
         self.tokens_dict = tokens_dict
         
@@ -189,6 +191,14 @@ class LexicalAnalyzer:
             self.__cursor_left()
 
             value = self.source_code[initial_pos:self.pos + 1]
+
+            # Now that we have the string value, we check whether it is a reserved keyword or an identifier
+
+            # If keyword, return the token
+            if self.symbolic_table.is_keyword(value):
+                return self.__return_token(token_value=None, token_col=initial_col, token_key='key', token_lin=self.lin)
+            
+            # Otherwise, return an identifier token
             return self.__return_token(token_value=value, token_col=initial_col, token_key='id', token_lin=self.lin)
 
         # If it starts with a number, it has to be a real number or an integer
@@ -342,4 +352,3 @@ class LexicalAnalyzer:
         self.__cursor_right()
 
         return token
-
