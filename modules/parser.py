@@ -1,6 +1,8 @@
 from lexical import LexicalAnalyzer
 from symbolic_table import SymbolicTable
 
+DEBUG = True
+
 class RSP():
 
     def __init__(self, lexical:LexicalAnalyzer):
@@ -32,6 +34,8 @@ class RSP():
         self.__validate_current_token_value('.')
 
         self.__parsed('program')
+
+        return self.successfully_parsed
     
     def parse_block(self):
 
@@ -41,7 +45,7 @@ class RSP():
         self.__validate_current_token_name('keyword')
         
         # Check the next production is towards var_dec_section
-        if self.current_token.value in {'int', 'bool'}: 
+        if self.current_token.value in {'int', 'boolean'}: 
 
             # Since we got a token but did not consume it, set the use_cached_token flag to true
             self.__cache_token()
@@ -326,10 +330,15 @@ class RSP():
         self.__handle_error()
 
     def parse_expr(self):
+        if DEBUG:
+            print('call parse expr')
         self.parse_simple_expr()
         self.parse_expr_1()
+        self.__parsed('expr')
     
     def parse_expr_1(self):
+        if DEBUG:
+            print('call parse expr_1')
         
         self.__next_token()
 
@@ -341,17 +350,21 @@ class RSP():
         self.__cache_token()
     
     def parse_simple_expr(self):
+        if DEBUG:
+            print('call parse simple expr')
 
         self.__next_token()
 
-        if self.current_token in {'+', '-'}:
+        if self.current_token not in {'+', '-'}:
 
-            self.__next_token()
+            self.__cache_token()
         
         self.parse_term()
         self.parse_simple_expr_1()
 
     def parse_simple_expr_1(self):
+        if DEBUG:
+            print('call parse simple expr 1')
 
         self.__next_token()
 
@@ -362,22 +375,35 @@ class RSP():
         self.__cache_token()
     
     def parse_term(self):
+        if DEBUG:
+            print('call parse term')
         
         self.parse_factor()
         self.parse_term_1()
+        self.__parsed('term')
     
     def parse_term_1(self):
+        if DEBUG:
+            print('call parse term 1')
 
         self.__next_token()
 
         if self.current_token.value in {'*', 'div', 'and'}:
             self.parse_factor()
+            return
         
         self.__cache_token()
     
     def parse_factor(self):
+        if DEBUG:
+            print('call parse factor')
 
         self.__next_token()
+
+        if self.current_token.value in {'true', 'false'}:
+
+            return
+        
 
         if self.current_token.name == 'identifier':
             
@@ -387,7 +413,7 @@ class RSP():
             
             return
 
-        if self.current_token == '(':
+        if self.current_token.value == '(':
 
             self.parse_expr()
 
@@ -437,6 +463,7 @@ class RSP():
         self.parse_command()
 
         self.parse_cond_command_1()
+        self.__parsed('cond_command')
     
     def parse_cond_command_1(self):
 
@@ -461,12 +488,13 @@ class RSP():
         self.__validate_current_token_value('do') 
 
         self.parse_command()
+        self.__parsed('iter_command')
 
     def parse_var(self):
 
         self.__next_token()
 
-        self.__validate_current_token_name('integer')
+        self.__validate_current_token_name('identifier')
 
         self.parse_var_tail()
     
@@ -511,10 +539,15 @@ class RSP():
         self.use_cached_token = True
 
     def __validate_current_token_value(self, value:str):
+
+        if DEBUG: 
+            print(f'Validating value "{value}" against the current_token.value "{self.current_token.value}"')
+
         if self.current_token.value != value:
             self.__handle_error()
 
     def __validate_current_token_name(self, name:str):
+        print(f'Validating value "{name}" against the current_token.name "{self.current_token.name}"')
         if self.current_token.name != name:
             self.__handle_error()
 
@@ -525,14 +558,18 @@ class RSP():
         """
         if not self.use_cached_token:
             self.current_token = self.lexical.get_next_token()
+            if DEBUG: 
+                print('CURRENT TOKEN: ', self.current_token.__str__())
+                print('SUCCESSFULLY PARSED: ', self.successfully_parsed)
             return
         
         self.use_cached_token = False
 
 
 
+
     def __handle_error(self):
-        print("ERROR")
+        print("ERROR: ")
 
 
 
@@ -540,9 +577,10 @@ class RSP():
 
         while True:
 
-            self.current_token = self.lexical.get_next_token()
+            self.__next_token()
 
-            print(self.current_token.__str__())
+            if DEBUG:
+                print(self.current_token.__str__())
 
             if self.current_token is None:
                 return

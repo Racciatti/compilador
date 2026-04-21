@@ -11,7 +11,11 @@ if __name__ == '__main__':
 
     parser = RSP(lexical)
 
-    parser.test_parse_program()
+    # parser.test_parse_program()
+
+    successfully_parsed = parser.parse_program()
+
+    print(successfully_parsed)
 
 
 
