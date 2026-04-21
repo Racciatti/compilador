@@ -210,8 +210,8 @@ class LexicalAnalyzer:
                 if not self.__is_current_symbol_digit():
                     break
             
-            # If we have a separator, this is an integer
-            if self.__is_current_symbol_separator():
+            # If we have a separator or an operator, this is an integer
+            if self.__is_current_symbol_separator() or self.__is_current_symbol_operator():
                 
                 self.__cursor_left()
                 

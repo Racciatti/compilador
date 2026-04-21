@@ -202,7 +202,7 @@ class RSP():
 
         self.__next_token()
 
-        if self.current_token == ';':
+        if self.current_token.value == ';':
 
             self.parse_formal_params_section()
 
@@ -215,9 +215,9 @@ class RSP():
     def parse_formal_params_section(self):
 
         self.__next_token()
-
-        if self.current_token.value == 'var': # ! We may need to distinguish between the derivations when building the AST
-            self.__next_token()
+        
+        if not self.current_token.value == 'var': # ! We may need to distinguish between the derivations when building the AST
+            self.__cache_token()
         
         self.parse_id_list()
 
@@ -228,6 +228,7 @@ class RSP():
         self.__next_token()
 
         self.__validate_current_token_name('identifier')
+
     
     def parse_comp_command(self):
         
@@ -355,7 +356,7 @@ class RSP():
 
         self.__next_token()
 
-        if self.current_token not in {'+', '-'}:
+        if self.current_token.value not in {'+', '-'}:
 
             self.__cache_token()
         

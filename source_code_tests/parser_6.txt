@@ -1,25 +1,22 @@
-// Caso de teste N° 5 para o analisador sintático: Declaração e chamada de processos 
+// Caso de teste N° 6 para o analisador sintático: Declaração e chamada de procedimentos
 
 program MyProgram;
 
-int a1, a2;
+procedure myProcedure(var a, b : integer; c, d : bool);
+int sum;
 
 begin
 
-a1 := 0;
-a2 := 100;
-
-while (a1 <= a2) and (a2<>0) do 
-
-begin
-    if a1 > a2 then
-        a1 := a1 / a2
-
-    else a2 := a2 + 1;
-
-    if a2 = a1 then a2 := 0 
+sum := a + b
 
 end
+
+begin 
+
+
+myProcedure;
+
+myProcedure(4*3+id,5-3*whatever)
 
 end
 .

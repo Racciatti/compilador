@@ -1,17 +1,22 @@
-// Caso de teste N° 5 para o analisador sintático: Notação de vetores e matrizes
+// Caso de teste N° 6 para o analisador sintático: Declaração e chamada de procedimentos
 
 program MyProgram;
 
-int v;
+procedure myProcedure(var a, b : integer; c, d : bool);
+int sum;
 
 begin
 
-a1 := 0;
-a2 := 100;
+sum := a + b
 
-while a1 <= a2 do 
+end
 
-    v[a1] := (a2 - a1) * a2
+begin 
+
+
+myProcedure;
+
+myProcedure(4*3+id,5-3*whatever)
 
 end
 .
