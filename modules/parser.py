@@ -9,6 +9,8 @@ class RSP():
         self.current_token = None
         self.use_cached_token = False
 
+        self.successfully_parsed = []
+
     def parse_program(self):
 
         self.__next_token()
@@ -28,6 +30,8 @@ class RSP():
         self.__next_token()
 
         self.__validate_current_token_value('.')
+
+        self.__parsed('program')
     
     def parse_block(self):
 
@@ -47,7 +51,8 @@ class RSP():
             self.parse_subr_dec_section()
 
             self.parse_comp_command()
-
+            
+            self.__parsed('block')
             return
 
         elif self.current_token.value in {'procedure', 'begin'}:
@@ -56,6 +61,8 @@ class RSP():
             self.parse_subr_dec_section()
 
             self.parse_comp_command()
+
+            self.__parsed('block')
 
             return
         
@@ -70,6 +77,8 @@ class RSP():
         self.__validate_current_token_value(';')
 
         self.parse_var_dec_section_1()
+
+        self.__parsed('vardecsec')
 
     def parse_var_dec_section_1(self):
 
@@ -96,6 +105,8 @@ class RSP():
         self.parse_type()
 
         self.parse_id_list()
+
+        self.__parsed('vardec')
 
     def parse_type(self):
 
@@ -228,6 +239,8 @@ class RSP():
 
         self.__validate_current_token_value('end')
 
+        self.__parsed('comp_command')
+
     def parse_comp_command_1(self):
         
         self.__next_token()
@@ -245,20 +258,24 @@ class RSP():
 
         if self.current_token.name == 'identifier':
             self.parse_cmd_attr_tail()
+            self.__parsed('command')
             return
         
         self.__cache_token()
 
         if self.current_token.value == 'if':
             self.parse_cond_command()
+            self.__parsed('command')
             return
         
         if self.current_token.value == 'while':
             self.parse_iter_command()
+            self.__parsed('command')
             return
         
         if self.current_token.value == 'begin':
             self.parse_comp_command()
+            self.__parsed('command')
             return
 
         self.__handle_error()
@@ -480,6 +497,8 @@ class RSP():
         self.__cache_token()
 
 
+    def __parsed(self, parsed_element:str):
+        self.successfully_parsed.append(parsed_element)
 
     def __cache_token(self):
         # Method created merely for interpretability

@@ -1,11 +1,10 @@
-// Just testing the recognition of operators here
-+
--
-*
->
-<
-=
-:=
-<>
->=
-<=
+// Caso de teste N° 1 para o analisador sintático
+
+program MyProgram;
+begin
+
+
+
+end
+
+.
