@@ -1,10 +1,9 @@
-// Caso de teste N° 1 para o analisador sintático
+// Caso de teste N° 1 para o analisador sintático: Programa mínimo
 
 program MyProgram;
 begin
 
-
+myVar := 5
 
 end
-
 .

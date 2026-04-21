@@ -311,10 +311,16 @@ class RSP():
 
             self.parse_expr()
 
+            self.__parsed('attr')
+
             return
 
         if self.current_token.value == ':=':
+            
             self.parse_expr()
+
+            self.__parsed('attr')
+            
             return
         
         self.__handle_error()
