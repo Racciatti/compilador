@@ -40,7 +40,7 @@ class RSP():
         if self.current_token.value in {'int', 'bool'}: 
 
             # Since we got a token but did not consume it, set the use_cached_token flag to true
-            self.use_cached_token = True
+            self.__cache_token()
 
             self.parse_var_dec_section()
 
@@ -51,7 +51,7 @@ class RSP():
             return
 
         elif self.current_token.value in {'procedure', 'begin'}:
-            self.use_cached_token = True
+            self.__cache_token()
 
             self.parse_subr_dec_section()
 
@@ -77,7 +77,7 @@ class RSP():
 
         if self.current_token.value in {'boolean', 'int'}:
 
-            self.use_cached_token = True
+            self.__cache_token()
 
             self.parse_var_dec()
 
@@ -89,7 +89,7 @@ class RSP():
 
             return
         
-        self.use_cached_token = True
+        self.__cache_token()
 
     def parse_var_dec(self):
         
@@ -127,18 +127,18 @@ class RSP():
             return
         
         # If the peek token is not consumed, we need to use it again later on
-        self.use_cached_token = True
+        self.__cache_token()
         
     def parse_subr_dec_section(self):
         
         self.__next_token()
 
         if self.current_token.value == 'procedure':
-            self.use_cached_token = True
+            self.__cache_token()
             self.parse_proc_dec()
             return
         
-        self.use_cached_token = True
+        self.__cache_token()
 
     def parse_proc_dec(self):
         self.__next_token()
@@ -163,11 +163,11 @@ class RSP():
 
         # Check if there are formal params in the procedure declaration
         if self.current_token.value == '(':
-            self.use_cached_token = True
+            self.__cache_token()
             self.parse_formal_params()
             return
         
-        self.use_cached_token = True
+        self.__cache_token()
     
     def parse_formal_params(self):
 
@@ -195,7 +195,7 @@ class RSP():
 
             return
         
-        self.use_cached_token = True
+        self.__cache_token()
 
     def parse_formal_params_section(self):
 
@@ -237,19 +237,257 @@ class RSP():
             self.parse_comp_command_1()
             return
 
-        self.use_cached_token = True
+        self.__cache_token()
 
     def parse_command(self):
+
+        self.__next_token()
+
+        if self.current_token.name == 'identifier':
+            self.parse_cmd_attr_tail()
+            return
         
+        self.__cache_token()
+
+        if self.current_token.value == 'if':
+            self.parse_cond_command()
+            return
+        
+        if self.current_token.value == 'while':
+            self.parse_iter_command()
+            return
+        
+        if self.current_token.value == 'begin':
+            self.parse_comp_command()
+            return
+
+        self.__handle_error()
+
+    def parse_cmd_attr_tail(self):
+        
+        self.__next_token()
+
+        # Cache the token immediately since we won't consume it here
+        self.__cache_token()
+
+        if self.current_token.value in {'[', ':='}:
+            self.parse_attr_tail()
+            return
+        
+        self.parse_proc_call_tail()
+
+    def parse_attr_tail(self):
+        
+        self.__next_token()
+
+        if self.current_token.value == '[':
+            
+            self.parse_expr()
+
+            self.__next_token()
+
+            self.__validate_current_token_value(']')
+            
+            self.__next_token()
+
+            self.__validate_current_token_value(':=')
+
+            self.parse_expr()
+
+            return
+
+        if self.current_token.value == ':=':
+            self.parse_expr()
+            return
+        
+        self.__handle_error()
+
+    def parse_expr(self):
+        self.parse_simple_expr()
+        self.parse_expr_1()
     
-        pass
+    def parse_expr_1(self):
+        
+        self.__next_token()
+
+        # REL non-terminal abstracted out
+        if self.current_token.value in {'=', '<>', '<', '<=', '>=', '>'}:
+            self.parse_simple_expr()
+            return
+        
+        self.__cache_token()
+    
+    def parse_simple_expr(self):
+
+        self.__next_token()
+
+        if self.current_token in {'+', '-'}:
+
+            self.__next_token()
+        
+        self.parse_term()
+        self.parse_simple_expr_1()
+
+    def parse_simple_expr_1(self):
+
+        self.__next_token()
+
+        if self.current_token.value in {'or', '+', '-'}:
+            self.parse_term()
+            return
+        
+        self.__cache_token()
+    
+    def parse_term(self):
+        
+        self.parse_factor()
+        self.parse_term_1()
+    
+    def parse_term_1(self):
+
+        self.__next_token()
+
+        if self.current_token.value in {'*', 'div', 'and'}:
+            self.parse_factor()
+        
+        self.__cache_token()
+    
+    def parse_factor(self):
+
+        self.__next_token()
+
+        if self.current_token.name == 'identifier':
+            
+            self.__cache_token()
+            
+            self.parse_var()
+            
+            return
+
+        if self.current_token == '(':
+
+            self.parse_expr()
+
+            self.__next_token()
+
+            self.__validate_current_token_value(')')
+
+            return
+        
+        if self.current_token.value == 'not':
+
+            self.parse_factor()
+
+            return
+        
+
+        self.__validate_current_token_name('integer')
+
+    def parse_proc_call_tail(self):
+        
+        self.__next_token()
+
+        if self.current_token.value == '(':
+
+            self.parse_expr_list()
+
+            self.__next_token()
+
+            self.__validate_current_token_value(')')
+
+            return
+        
+        self.__cache_token()
+
+    def parse_cond_command(self):
+        
+        self.__next_token()
+
+        self.__validate_current_token_value('if')
+
+        self.parse_expr()
+
+        self.__next_token()
+
+        self.__validate_current_token_value('then')
+
+        self.parse_command()
+
+        self.parse_cond_command_1()
+    
+    def parse_cond_command_1(self):
+
+        self.__next_token()
+
+        if self.current_token.value == 'else':
+
+            self.parse_command()
+        
+        self.__cache_token()
+    
+    def parse_iter_command(self):
+        
+        self.__next_token()
+
+        self.__validate_current_token_value('while')
+
+        self.parse_expr()
+
+        self.__next_token()
+
+        self.__validate_current_token_value('do') 
+
+        self.parse_command()
+
+    def parse_var(self):
+
+        self.__next_token()
+
+        self.__validate_current_token_name('integer')
+
+        self.parse_var_tail()
+    
+    def parse_var_tail(self):
+
+        self.__next_token()
+
+        if self.current_token.value == '[':
+
+            self.parse_expr()
+
+            self.__next_token()
+
+            self.__validate_current_token_value(']')
+
+            return
+
+        self.__cache_token()
+
+    def parse_expr_list(self):
+
+        self.parse_expr()
+        self.parse_expr_list_1()
+
+    def parse_expr_list_1(self):
+
+        self.__next_token()
+
+        if self.current_token.value == ',':
+            self.parse_expr()
+            self.parse_expr_list_1()
+            return
+
+        self.__cache_token()
 
 
+
+    def __cache_token(self):
+        # Method created merely for interpretability
+        self.use_cached_token = True
 
     def __validate_current_token_value(self, value:str):
         if self.current_token.value != value:
             self.__handle_error()
-
 
     def __validate_current_token_name(self, name:str):
         if self.current_token.name != name:
@@ -266,22 +504,10 @@ class RSP():
         
         self.use_cached_token = False
 
+
+
     def __handle_error(self):
-        pass # !!!
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print("ERROR")
 
 
 
