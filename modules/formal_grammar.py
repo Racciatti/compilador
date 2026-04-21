@@ -47,3 +47,14 @@ class Alphabet:
             ans += f"{symbol}:{self.symbols[symbol].name}\n"
         
         return ans
+    
+
+class Terminal: 
+
+    def __init__(self):
+        pass
+
+class NonTerminal:
+
+    def __init__(self):
+        pass
