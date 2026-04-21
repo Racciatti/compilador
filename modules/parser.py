@@ -331,15 +331,11 @@ class RSP():
         self.__handle_error()
 
     def parse_expr(self):
-        if DEBUG:
-            print('call parse expr')
         self.parse_simple_expr()
         self.parse_expr_1()
         self.__parsed('expr')
     
     def parse_expr_1(self):
-        if DEBUG:
-            print('call parse expr_1')
         
         self.__next_token()
 
@@ -351,8 +347,6 @@ class RSP():
         self.__cache_token()
     
     def parse_simple_expr(self):
-        if DEBUG:
-            print('call parse simple expr')
 
         self.__next_token()
 
@@ -364,8 +358,6 @@ class RSP():
         self.parse_simple_expr_1()
 
     def parse_simple_expr_1(self):
-        if DEBUG:
-            print('call parse simple expr 1')
 
         self.__next_token()
 
@@ -376,16 +368,12 @@ class RSP():
         self.__cache_token()
     
     def parse_term(self):
-        if DEBUG:
-            print('call parse term')
         
         self.parse_factor()
         self.parse_term_1()
         self.__parsed('term')
     
     def parse_term_1(self):
-        if DEBUG:
-            print('call parse term 1')
 
         self.__next_token()
 
@@ -396,8 +384,6 @@ class RSP():
         self.__cache_token()
     
     def parse_factor(self):
-        if DEBUG:
-            print('call parse factor')
 
         self.__next_token()
 
@@ -541,14 +527,10 @@ class RSP():
 
     def __validate_current_token_value(self, value:str):
 
-        if DEBUG: 
-            print(f'Validating value "{value}" against the current_token.value "{self.current_token.value}"')
-
         if self.current_token.value != value:
             self.__handle_error()
 
     def __validate_current_token_name(self, name:str):
-        print(f'Validating value "{name}" against the current_token.name "{self.current_token.name}"')
         if self.current_token.name != name:
             self.__handle_error()
 
@@ -559,9 +541,6 @@ class RSP():
         """
         if not self.use_cached_token:
             self.current_token = self.lexical.get_next_token()
-            if DEBUG: 
-                print('CURRENT TOKEN: ', self.current_token.__str__())
-                print('SUCCESSFULLY PARSED: ', self.successfully_parsed)
             return
         
         self.use_cached_token = False
@@ -570,7 +549,8 @@ class RSP():
 
 
     def __handle_error(self):
-        print("ERROR: ")
+        # !!!
+        pass
 
 
 
@@ -580,8 +560,7 @@ class RSP():
 
             self.__next_token()
 
-            if DEBUG:
-                print(self.current_token.__str__())
+            print(self.current_token.__str__())
 
             if self.current_token is None:
                 return
