@@ -7,14 +7,14 @@ int sum;
 
 begin
 
-sum := a + * * * * - - -b 
+sum := a + * * * * - - -b //
 
 end
 
 begin 
 
 
-myPro 6 6 cedure; 
+myProcedure...; //
 
 myProcedure(4*3+id,5-3*whatever)
 
