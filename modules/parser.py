@@ -1,7 +1,7 @@
 from lexical import LexicalAnalyzer
 from symbolic_table import SymbolicTable
 
-DEBUG = True
+DEBUG = False
 
 class RSP():
 

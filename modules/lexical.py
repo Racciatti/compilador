@@ -167,6 +167,8 @@ class LexicalAnalyzer:
 
         # If it starts with a character, it has to be an identifier or keyword
         if self.__is_current_symbol_character():
+
+            print('CHARACTER START IDENTIFIED')
             
             
             # Regardless of the token type, this has to be a sequence of characters and digits. Once we find a separator, we got the string
@@ -184,6 +186,8 @@ class LexicalAnalyzer:
             self.__cursor_left()
 
             value = self.source_code[initial_pos:self.pos + 1]
+
+            print(f"Returning token with value '{value}'")
 
             # Now that we have the string value, we check whether it is a reserved keyword or an identifier
 

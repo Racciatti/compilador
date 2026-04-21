@@ -122,7 +122,7 @@ ALPHABET_SYMBOLS = [
 
         # Tokenizeable
         Symbol('(', "open_p",       'separator'),
-        Symbol('(', "open_p",       'separator'),
+        Symbol(')', "close_p",       'separator'),
         Symbol(']', "close_b",      'separator'),
         Symbol('[', "open_b",       'separator'),
         Symbol(',', "comma",        'separator'),

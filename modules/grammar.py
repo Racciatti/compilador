@@ -39,7 +39,7 @@ class Alphabet:
         if self.contains_symbol(symbol):
             return self.symbols[symbol]
         
-        return None
+        raise ValueError(f'Symbol "{symbol}" does not exist in the alphabet')
     
     def __str__(self):
         ans = ""
