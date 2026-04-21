@@ -1,7 +1,7 @@
 from abstractions import Token
 from registry import SymbolicTable, Element
 from formal_grammar import Alphabet, Symbol
-from engine import LexicalAnalyzer, RSP
+from engine import LexicalAnalyzer, RDP
 
 TOKENS_DICT = {
     '+':    'op_sum',

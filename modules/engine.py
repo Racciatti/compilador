@@ -322,7 +322,7 @@ class LexicalAnalyzer:
 
         return token
 
-class RSP:
+class RDP:
 
     def __init__(self, lexical:LexicalAnalyzer, abstract_syntax_tree:AST):
         

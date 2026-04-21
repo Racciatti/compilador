@@ -1,5 +1,5 @@
 from utils import build_lexical
-from engine import RSP
+from engine import RDP
 from abstractions import AST
 
 if __name__ == '__main__':
@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     ast = AST()
 
-    parser = RSP(lexical, ast)
+    parser = RDP(lexical, ast)
 
     # parser.test_parse_program()
 
