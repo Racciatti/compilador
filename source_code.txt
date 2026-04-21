@@ -1,22 +1,9 @@
-// Caso de teste N° 6 para o analisador sintático: Declaração e chamada de procedimentos
+// Caso de teste N° 1 para o analisador sintático: Programa mínimo
 
 program MyProgram;
-
-procedure myProcedure(var a, b : integer; c, d : bool);
-int sum;
-
 begin
 
-sum := a + b
-
-end
-
-begin 
-
-
-myProcedure;
-
-myProcedure(4*3+id,5-3*whatever)
+myVar := 5
 
 end
 .

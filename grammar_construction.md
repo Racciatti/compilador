@@ -3,10 +3,10 @@
 ## Executive Summary
 
 ### Purpose 
-The goal of this file is to transform the LALG grammar into a grammar that can be parsed by a Recursive Descendent Parser (RSP).  
+The goal of this file is to transform the LALG grammar into a grammar that can be parsed by a Recursive Descendent Parser (RDP).  
 
 ### Methodology
-Since the constraints imposed by the RSP on the grammar are for it to be LL(1), we need to transform the grammar into LL(1) by eliminating left recursion (both immediate and indirect) and performing left factoring, which will be done systematically:
+Since the constraints imposed by the RDP on the grammar are for it to be LL(1), we need to transform the grammar into LL(1) by eliminating left recursion (both immediate and indirect) and performing left factoring, which will be done systematically:
 1. Remove indirect left recursion 
 2. Remove immediate left recursion 
 3. Perform left factoring

@@ -3,6 +3,55 @@ from registry import SymbolicTable, Element
 from formal_grammar import Alphabet, Symbol
 from engine import LexicalAnalyzer, RDP
 
+LAST_SET = {
+    "S":                    {"."}, 
+    "BLOCK":                {"end"},
+
+    "VAR_DEC_SECTION":      {";"},
+    "VAR_DEC_SECTION_1":    {";"},
+    "VAR_DEC":              {"ID"},
+
+    "ID_LIST":              {"ID"},
+    "ID_LIST_1":            {"ID"},
+
+    "SUBR_DEC_SECTION":     {";"},
+    "PROC_DEC":             {"end"},           # último de BLOCK
+    "PROC_DEC_1":           {")"},
+
+    "FORMAL_PARAMS":        {")"},
+    "FORMAL_PARAMS_1":      {"ID"},            # último de FORMAL_PARAMS_SECTION
+    "FORMAL_PARAMS_SECTION":{"ID"},
+
+    "COMP_COMMAND":         {"end"},
+    "COMP_COMMAND_1":       {"ID", "]", "NUM", ")", "end"},  # = LAST(COMMAND)
+
+    "COMMAND":              {"ID", "]", "NUM", ")", "end"},
+    "CMD_ATTR_TAIL":        {"ID", "]", "NUM", ")"},
+    "ATTR_TAIL":            {"ID", "]", "NUM", ")"},         # = LAST(EXPR)
+    "PROC_CALL_TAIL":       {")"},
+
+    "COND_COMMAND":         {"ID", "]", "NUM", ")", "end"},  # = LAST(COMMAND)
+    "COND_COMMAND_1":       {"ID", "]", "NUM", ")", "end"},  # = LAST(COMMAND)
+    "ITER_COMMAND":         {"ID", "]", "NUM", ")", "end"},  # = LAST(COMMAND)
+
+    "EXPR":                 {"ID", "]", "NUM", ")"},
+    "EXPR_1":               {"ID", "]", "NUM", ")"},         # = LAST(SIMPLE_EXPR)
+    "REL":                  {"=", "<>", "<", "<=", ">=", ">"},
+
+    "SIMPLE_EXPR":          {"ID", "]", "NUM", ")"},
+    "SIMPLE_EXPR_1":        {"ID", "]", "NUM", ")"},         # = LAST(TERM)
+
+    "TERM":                 {"ID", "]", "NUM", ")"},
+    "TERM_1":               {"ID", "]", "NUM", ")"},         # = LAST(FACTOR)
+
+    "FACTOR":               {"ID", "]", "NUM", ")"},
+    "VAR":                  {"ID", "]"},
+    "VAR_TAIL":             {"]"},
+
+    "EXPR_LIST":            {"ID", "]", "NUM", ")"},
+    "EXPR_LIST_1":          {"ID", "]", "NUM", ")"},
+}
+
 TOKENS_DICT = {
     '+':    'op_sum',
     '-':    'op_sub', 
