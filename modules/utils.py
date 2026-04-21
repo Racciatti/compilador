@@ -14,6 +14,8 @@ TOKENS_DICT = {
     ' ':    'space',
     '(':    'open_p',
     ')':    'close_p',
+    '[':    'open_b',
+    ']':    'close_b',
     ':':    'colon',
     '\n':   'new_line',
     ',':    'comma',
@@ -120,7 +122,9 @@ ALPHABET_SYMBOLS = [
 
         # Tokenizeable
         Symbol('(', "open_p",       'separator'),
-        Symbol(')', "close_p",      'separator'),
+        Symbol('(', "open_p",       'separator'),
+        Symbol(']', "close_b",      'separator'),
+        Symbol('[', "open_b",       'separator'),
         Symbol(',', "comma",        'separator'),
         Symbol(';', "semicolon",    'separator'),
         Symbol('$', "eof",          'separator'),
