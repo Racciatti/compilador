@@ -986,6 +986,7 @@ class RDP:
         """
         if not self.use_cached_token:
             self.current_token = self.lexical.get_next_token()
+            print(self.current_token.__str__())
             return
         
         self.use_cached_token = False
