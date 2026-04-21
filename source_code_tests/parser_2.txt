@@ -1,0 +1,15 @@
+// Caso de teste N° 2 para o analisador sintático: Multiplas atribuições a declarações de variáveis
+
+program MyProgram;
+
+boolean myBooleanVar;
+int myNumericVar;
+
+begin
+
+myBooleanVar := true;
+
+myNumericVar := 12
+
+end
+.

@@ -1,0 +1,19 @@
+// Caso de teste N° 3 para o analisador sintático: Operações aritméticas e lógicas
+
+program MyProgram;
+
+boolean b1, b2, b3;
+int v1, v2, v3;
+
+begin
+
+v1 := 3;
+v2 := 5;
+v3 := ((3 * 5) - v1 ) div v2;
+
+b1 := true;
+b2 := false;
+b3 := not (b1 and b2 or b1)
+
+end
+.
