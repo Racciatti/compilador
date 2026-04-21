@@ -1,5 +1,7 @@
-from lexical import Alphabet, LexicalAnalyzer, Symbol, Token
-from symbolic_table import SymbolicTable, Element
+from abstractions import Token
+from registry import SymbolicTable, Element
+from formal_grammar import Alphabet, Symbol
+from engine import LexicalAnalyzer, RSP
 
 TOKENS_DICT = {
     '+':    'op_sum',
