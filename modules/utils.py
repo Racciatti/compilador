@@ -26,6 +26,7 @@ TOKENS_DICT = {
     '<=':   'seq',
     '<>':   'diff',
     ':=':   'attr',
+    '.':    'dot'
     }
 
 ALPHABET_SYMBOLS = [
@@ -107,8 +108,6 @@ ALPHABET_SYMBOLS = [
         Symbol('=', "equals",       'operator'),
         Symbol('<', "left_arrow",   'operator'),
         Symbol('>', "right_arrow",  'operator'),
-        Symbol('(', "open_p",       'operator'),
-        Symbol(')', "close_p",      'operator'),
         Symbol(':', "colon",        'operator'),
         
         # SEPARATORS
@@ -120,12 +119,14 @@ ALPHABET_SYMBOLS = [
         Symbol('}', "close_b",      'separator'),
 
         # Tokenizeable
+        Symbol('(', "open_p",       'separator'),
+        Symbol(')', "close_p",      'separator'),
         Symbol(',', "comma",        'separator'),
         Symbol(';', "semicolon",    'separator'),
         Symbol('$', "eof",          'separator'),
 
         # MISC
-        Symbol('.', "dot")
+        Symbol('.', "dot", 'separator')
 
         # Eliminated
         # Symbol("/", "divider",      'operator'),
