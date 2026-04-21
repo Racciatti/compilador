@@ -479,15 +479,23 @@ class RSP:
         self.__cache_token()
         
     def __parse_subr_dec_section(self):
+
+        self.start_parsing('SUBR_DEC_SECTION')
         
         self.__next_token()
 
         if self.current_token.value == 'procedure':
+        
             self.__cache_token()
+            
             self.__parse_proc_dec()
+
+            self.finish_parsing
             return
         
         self.__cache_token()
+
+        self.finish_parsing()
 
     def __parse_proc_dec(self):
 
@@ -694,8 +702,12 @@ class RSP:
 
     def __parse_expr(self):
         self.start_parsing('EXPR')
+
+        
         self.__parse_simple_expr()
+        
         self.__parse_expr_1()
+        
         self.finish_parsing()
     
     def __parse_expr_1(self):
@@ -740,9 +752,13 @@ class RSP:
         self.__cache_token()
     
     def __parse_term(self):
-        self.start_parsing('TERM')        
+        self.start_parsing('TERM')   
+
+        
         self.__parse_factor()
+        
         self.__parse_term_1()
+        
         self.finish_parsing()
     
     def __parse_term_1(self):
@@ -750,8 +766,11 @@ class RSP:
         self.__next_token()
 
         if self.current_token.value in {'*', 'div', 'and'}:
+            
             self.ast.add_leaf(self.current_token)
+            
             self.__parse_factor()
+            
             return
         
         self.__cache_token()
@@ -808,6 +827,8 @@ class RSP:
 
         self.__validate_current_token_name('integer')
 
+        self.finish_parsing()
+
     def __parse_proc_call_tail(self):
 
         self.start_parsing('PROC_CALL')
@@ -829,6 +850,7 @@ class RSP:
             return
         
         self.__cache_token()
+        self.finish_parsing()
 
     def __parse_cond_command(self):
         
