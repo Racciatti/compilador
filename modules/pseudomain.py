@@ -1,7 +1,6 @@
-from grammar import Alphabet
 from utils import build_lexical
-from lexical import LexicalAnalyzer, Token
-from parser import RSP
+from engine import RSP
+from abstractions import AST
 
 if __name__ == '__main__':
 
@@ -9,7 +8,9 @@ if __name__ == '__main__':
     
     lexical.load_source_code()
 
-    parser = RSP(lexical)
+    ast = AST()
+
+    parser = RSP(lexical, ast)
 
     # parser.test_parse_program()
 

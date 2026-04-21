@@ -1,5 +1,5 @@
 from abstractions import Token, AST
-from formal_grammar import Alphabet, Token 
+from formal_grammar import Alphabet
 from registry import SymbolicTable
 
 class LexicalAnalyzer:
@@ -324,15 +324,18 @@ class LexicalAnalyzer:
 
 class RSP:
 
-    def __init__(self, lexical:LexicalAnalyzer):
+    def __init__(self, lexical:LexicalAnalyzer, abstract_syntax_tree:AST):
         
         self.lexical = lexical
         self.current_token = None
         self.use_cached_token = False
+        self.ast = abstract_syntax_tree
 
-        self.successfully_parsed = []
+        self.ast.create_root('S')
 
     def parse_program(self):
+
+        self.start_parsing('PROGRAM')
 
         self.__next_token()
 
@@ -346,17 +349,17 @@ class RSP:
 
         self.__validate_current_token_value(';')
         
-        self.parse_block()
+        self.__parse_block()
 
         self.__next_token()
 
         self.__validate_current_token_value('.')
 
-        self.__parsed('program')
+        self.finish_parsing()
 
-        return self.successfully_parsed
-    
-    def parse_block(self):
+    def __parse_block(self):
+
+        self.start_parsing('BLOCK')
 
         self.__next_token()
 
@@ -369,41 +372,42 @@ class RSP:
             # Since we got a token but did not consume it, set the use_cached_token flag to true
             self.__cache_token()
 
-            self.parse_var_dec_section()
+            self.__parse_var_dec_section()
 
-            self.parse_subr_dec_section()
+            self.__parse_subr_dec_section()
 
-            self.parse_comp_command()
+            self.__parse_comp_command()
             
-            self.__parsed('block')
+            self.finish_parsing()
             return
 
         elif self.current_token.value in {'procedure', 'begin'}:
             self.__cache_token()
 
-            self.parse_subr_dec_section()
+            self.__parse_subr_dec_section()
 
-            self.parse_comp_command()
+            self.__parse_comp_command()
 
-            self.__parsed('block')
-
+            self.finish_parsing()
             return
         
         self.__handle_error()
 
-    def parse_var_dec_section(self):
+    def __parse_var_dec_section(self):
+
+        self.start_parsing('VAR_DEC_SECTION')
         
-        self.parse_var_dec()
+        self.__parse_var_dec()
 
         self.__next_token()
 
         self.__validate_current_token_value(';')
 
-        self.parse_var_dec_section_1()
+        self.__parse_var_dec_section_1()
 
-        self.__parsed('vardecsec')
+        self.finish_parsing()
 
-    def parse_var_dec_section_1(self):
+    def __parse_var_dec_section_1(self):
 
         self.__next_token()
 
@@ -411,70 +415,84 @@ class RSP:
 
             self.__cache_token()
 
-            self.parse_var_dec()
+            self.__parse_var_dec()
 
             self.__next_token()
 
             self.__validate_current_token_value(';')
 
-            self.parse_var_dec_section_1()
+            self.__parse_var_dec_section_1()
 
             return
         
         self.__cache_token()
 
-    def parse_var_dec(self):
+    def __parse_var_dec(self):
+
+        self.start_parsing('VAR_DEC')
         
-        self.parse_type()
+        self.__parse_type()
 
-        self.parse_id_list()
+        self.__parse_id_list()
 
-        self.__parsed('vardec')
+        self.finish_parsing()
 
-    def parse_type(self):
+    def __parse_type(self):
 
         self.__next_token()
         
         if self.current_token.value not in {'boolean', 'int'}:
             self.__handle_error()
+            return
+
+        self.ast.add_leaf(self.current_token)
         
-    def parse_id_list(self):
+    def __parse_id_list(self):
+
+        self.start_parsing('ID_LIST')
 
         self.__next_token()
 
         self.__validate_current_token_name('identifier')
 
-        self.parse_id_list_1()
-    
-    def parse_id_list_1(self):
+        self.__parse_id_list_1()
+
+        self.finish_parsing()
+
+    def __parse_id_list_1(self):
 
         self.__next_token()
 
         if self.current_token.value == ',':
 
+            self.ast.add_leaf(self.current_token)
+
             self.__next_token()
 
             self.__validate_current_token_name('identifier')
 
-            self.parse_id_list_1()
+            self.__parse_id_list_1()
 
             return
         
         # If the peek token is not consumed, we need to use it again later on
         self.__cache_token()
         
-    def parse_subr_dec_section(self):
+    def __parse_subr_dec_section(self):
         
         self.__next_token()
 
         if self.current_token.value == 'procedure':
             self.__cache_token()
-            self.parse_proc_dec()
+            self.__parse_proc_dec()
             return
         
         self.__cache_token()
 
-    def parse_proc_dec(self):
+    def __parse_proc_dec(self):
+
+        self.start_parsing('PROC_DEC')
+
         self.__next_token()
 
         self.__validate_current_token_value('procedure')
@@ -483,62 +501,75 @@ class RSP:
 
         self.__validate_current_token_name('identifier')
 
-        self.parse_proc_dec_1()
+        self.__parse_proc_dec_1()
 
         self.__next_token()
 
         self.__validate_current_token_value(';')
 
-        self.parse_block()
+        self.__parse_block()
 
-    def parse_proc_dec_1(self):
+        self.finish_parsing()
+
+    def __parse_proc_dec_1(self):
 
         self.__next_token()
 
         # Check if there are formal params in the procedure declaration
         if self.current_token.value == '(':
             self.__cache_token()
-            self.parse_formal_params()
+            self.__parse_formal_params()
             return
         
         self.__cache_token()
     
-    def parse_formal_params(self):
+    def __parse_formal_params(self):
+
+        self.start_parsing('FORMAL_PARAMS')
 
         self.__next_token()
 
         self.__validate_current_token_value('(')
 
-        self.parse_formal_params_section()
+        self.__parse_formal_params_section()
 
-        self.parse_formal_params_1()
+        self.__parse_formal_params_1()
 
         self.__next_token()
 
         self.__validate_current_token_value(')')
+
+        self.finish_parsing()
     
-    def parse_formal_params_1(self):
+    def __parse_formal_params_1(self):
 
         self.__next_token()
 
         if self.current_token.value == ';':
 
-            self.parse_formal_params_section()
+            self.ast.add_leaf(self.current_token)
 
-            self.parse_formal_params_1()
+            self.__parse_formal_params_section()
+
+            self.__parse_formal_params_1()
 
             return
         
         self.__cache_token()
 
-    def parse_formal_params_section(self):
+    def __parse_formal_params_section(self):
+
+        self.start_parsing('FORMAL_PARAMS_SECTION')
 
         self.__next_token()
         
         if not self.current_token.value == 'var': # ! We may need to distinguish between the derivations when building the AST
             self.__cache_token()
         
-        self.parse_id_list()
+        else:
+            self.ast.add_leaf(self.current_token)
+        
+        self.__parse_id_list()
 
         self.__next_token()
 
@@ -548,62 +579,70 @@ class RSP:
 
         self.__validate_current_token_name('identifier')
 
-    def parse_comp_command(self):
+        self.finish_parsing()
+
+    def __parse_comp_command(self):
         
+        self.start_parsing('COMP_COMMAND')
+
         self.__next_token()
 
         self.__validate_current_token_value('begin')
 
-        self.parse_command()
+        self.__parse_command()
         
-        self.parse_comp_command_1()
+        self.__parse_comp_command_1()
 
         self.__next_token()
 
         self.__validate_current_token_value('end')
 
-        self.__parsed('comp_command')
+        self.finish_parsing()
 
-    def parse_comp_command_1(self):
+    def __parse_comp_command_1(self):
         
         self.__next_token()
 
         if self.current_token.value == ';':
-            self.parse_command()
-            self.parse_comp_command_1()
+            self.ast.add_leaf(self.current_token)
+            self.__parse_command()
+            self.__parse_comp_command_1()
             return
 
         self.__cache_token()
 
-    def parse_command(self):
+    def __parse_command(self):
+
+        self.start_parsing('COMMAND')
 
         self.__next_token()
 
         if self.current_token.name == 'identifier':
-            self.parse_cmd_attr_tail()
-            self.__parsed('command')
+            self.ast.add_leaf(self.current_token)
+            self.__parse_cmd_attr_tail()
+            self.finish_parsing()
             return
         
         self.__cache_token()
 
         if self.current_token.value == 'if':
-            self.parse_cond_command()
-            self.__parsed('command')
+            self.__parse_cond_command()
+            self.finish_parsing()
             return
         
         if self.current_token.value == 'while':
-            self.parse_iter_command()
-            self.__parsed('command')
+            self.__parse_iter_command()
+            self.finish_parsing()
             return
         
         if self.current_token.value == 'begin':
-            self.parse_comp_command()
-            self.__parsed('command')
+            self.__parse_comp_command()
+            self.finish_parsing()
             return
 
         self.__handle_error()
 
-    def parse_cmd_attr_tail(self):
+    def __parse_cmd_attr_tail(self):
         
         self.__next_token()
 
@@ -611,18 +650,22 @@ class RSP:
         self.__cache_token()
 
         if self.current_token.value in {'[', ':='}:
-            self.parse_attr_tail()
+            self.__parse_attr_tail()
             return
         
-        self.parse_proc_call_tail()
+        self.__parse_proc_call_tail()
 
-    def parse_attr_tail(self):
+    def __parse_attr_tail(self):
+
+        self.start_parsing('ATTR')
         
         self.__next_token()
 
         if self.current_token.value == '[':
+
+            self.ast.add_leaf(self.current_token)
             
-            self.parse_expr()
+            self.__parse_expr()
 
             self.__next_token()
 
@@ -632,39 +675,44 @@ class RSP:
 
             self.__validate_current_token_value(':=')
 
-            self.parse_expr()
+            self.__parse_expr()
 
-            self.__parsed('attr')
+            self.finish_parsing()
 
             return
 
         if self.current_token.value == ':=':
-            
-            self.parse_expr()
 
-            self.__parsed('attr')
+            self.ast.add_leaf(self.current_token)
             
+            self.__parse_expr()
+
+            self.finish_parsing()
             return
         
         self.__handle_error()
 
-    def parse_expr(self):
-        self.parse_simple_expr()
-        self.parse_expr_1()
-        self.__parsed('expr')
+    def __parse_expr(self):
+        self.start_parsing('EXPR')
+        self.__parse_simple_expr()
+        self.__parse_expr_1()
+        self.finish_parsing()
     
-    def parse_expr_1(self):
+    def __parse_expr_1(self):
         
         self.__next_token()
 
         # REL non-terminal abstracted out
         if self.current_token.value in {'=', '<>', '<', '<=', '>=', '>'}:
-            self.parse_simple_expr()
+            self.ast.add_leaf(self.current_token)
+            self.__parse_simple_expr()
             return
         
         self.__cache_token()
     
-    def parse_simple_expr(self):
+    def __parse_simple_expr(self):
+
+        self.start_parsing('SIMPLE_EXPR')
 
         self.__next_token()
 
@@ -672,40 +720,53 @@ class RSP:
 
             self.__cache_token()
         
-        self.parse_term()
-        self.parse_simple_expr_1()
+        else:
+            self.ast.add_leaf(self.current_token)
+        
+        self.__parse_term()
+        self.__parse_simple_expr_1()
 
-    def parse_simple_expr_1(self):
+        self.finish_parsing()
+
+    def __parse_simple_expr_1(self):
 
         self.__next_token()
 
         if self.current_token.value in {'or', '+', '-'}:
-            self.parse_term()
+            self.ast.add_leaf(self.current_token)
+            self.__parse_term()
             return
         
         self.__cache_token()
     
-    def parse_term(self):
-        
-        self.parse_factor()
-        self.parse_term_1()
-        self.__parsed('term')
+    def __parse_term(self):
+        self.start_parsing('TERM')        
+        self.__parse_factor()
+        self.__parse_term_1()
+        self.finish_parsing()
     
-    def parse_term_1(self):
+    def __parse_term_1(self):
 
         self.__next_token()
 
         if self.current_token.value in {'*', 'div', 'and'}:
-            self.parse_factor()
+            self.ast.add_leaf(self.current_token)
+            self.__parse_factor()
             return
         
         self.__cache_token()
     
-    def parse_factor(self):
+    def __parse_factor(self):
+
+        self.start_parsing('FACTOR')
 
         self.__next_token()
 
         if self.current_token.value in {'true', 'false'}:
+            
+            self.ast.add_leaf(self.current_token)
+            
+            self.finish_parsing()
 
             return
         
@@ -714,102 +775,132 @@ class RSP:
             
             self.__cache_token()
             
-            self.parse_var()
+            self.__parse_var()
             
+            self.finish_parsing()
+
             return
 
         if self.current_token.value == '(':
+            
+            self.ast.add_leaf(self.current_token)
 
-            self.parse_expr()
+            self.__parse_expr()
 
             self.__next_token()
 
             self.__validate_current_token_value(')')
 
+            self.finish_parsing()
+
             return
         
         if self.current_token.value == 'not':
 
-            self.parse_factor()
+            self.ast.add_leaf(self.current_token)
+
+            self.__parse_factor()
+
+            self.finish_parsing()
 
             return
         
 
         self.__validate_current_token_name('integer')
 
-    def parse_proc_call_tail(self):
+    def __parse_proc_call_tail(self):
+
+        self.start_parsing('PROC_CALL')
         
         self.__next_token()
 
         if self.current_token.value == '(':
+            
+            self.ast.add_leaf(self.current_token)
 
-            self.parse_expr_list()
+            self.__parse_expr_list()
 
             self.__next_token()
 
             self.__validate_current_token_value(')')
 
+            self.finish_parsing()
+
             return
         
         self.__cache_token()
 
-    def parse_cond_command(self):
+    def __parse_cond_command(self):
         
+        self.start_parsing('COND_COMMAND')
+
         self.__next_token()
 
         self.__validate_current_token_value('if')
 
-        self.parse_expr()
+        self.__parse_expr()
 
         self.__next_token()
 
         self.__validate_current_token_value('then')
 
-        self.parse_command()
+        self.__parse_command()
 
-        self.parse_cond_command_1()
-        self.__parsed('cond_command')
-    
-    def parse_cond_command_1(self):
+        self.__parse_cond_command_1()
+
+        self.finish_parsing()
+
+    def __parse_cond_command_1(self):
 
         self.__next_token()
 
         if self.current_token.value == 'else':
 
-            self.parse_command()
+            self.ast.add_leaf(self.current_token)
+            
+            self.__parse_command()
         
         self.__cache_token()
     
-    def parse_iter_command(self):
+    def __parse_iter_command(self):
+
+        self.start_parsing('ITER_COMMAND')
         
         self.__next_token()
 
         self.__validate_current_token_value('while')
 
-        self.parse_expr()
+        self.__parse_expr()
 
         self.__next_token()
 
         self.__validate_current_token_value('do') 
 
-        self.parse_command()
-        self.__parsed('iter_command')
+        self.__parse_command()
 
-    def parse_var(self):
+        self.finish_parsing()
+
+    def __parse_var(self):
+
+        self.start_parsing('VAR')
 
         self.__next_token()
 
         self.__validate_current_token_name('identifier')
 
-        self.parse_var_tail()
-    
-    def parse_var_tail(self):
+        self.__parse_var_tail()
 
+        self.finish_parsing()
+    
+    def __parse_var_tail(self):
+        
         self.__next_token()
 
         if self.current_token.value == '[':
 
-            self.parse_expr()
+            self.ast.add_leaf(self.current_token)
+
+            self.__parse_expr()
 
             self.__next_token()
 
@@ -819,25 +910,33 @@ class RSP:
 
         self.__cache_token()
 
-    def parse_expr_list(self):
+    def __parse_expr_list(self):
 
-        self.parse_expr()
-        self.parse_expr_list_1()
+        self.start_parsing('EXPR_LIST')
 
-    def parse_expr_list_1(self):
+        self.__parse_expr()
+        
+        self.__parse_expr_list_1()
+
+        self.finish_parsing()
+
+    def __parse_expr_list_1(self):
 
         self.__next_token()
 
         if self.current_token.value == ',':
-            self.parse_expr()
-            self.parse_expr_list_1()
+            
+            self.ast.add_leaf(self.current_token)
+            
+            self.__parse_expr()
+
+            self.__parse_expr_list_1()
+            
             return
 
         self.__cache_token()
 
 
-    def __parsed(self, parsed_element:str):
-        self.successfully_parsed.append(parsed_element)
 
     def __cache_token(self):
         # Method created merely for interpretability
@@ -847,10 +946,14 @@ class RSP:
 
         if self.current_token.value != value:
             self.__handle_error()
+        
+        self.ast.add_leaf(self.current_token)
 
     def __validate_current_token_name(self, name:str):
         if self.current_token.name != name:
             self.__handle_error()
+        
+        self.ast.add_leaf(self.current_token)
 
     def __next_token(self):
         """
@@ -864,6 +967,15 @@ class RSP:
         self.use_cached_token = False
 
 
+    # AST methods
+    def start_parsing(self, name:str):
+        self.ast.add_node(name)
+
+    def finish_parsing(self):
+        self.ast.validate_current_node()
+
+    def validate_token(self, token:Token):
+        self.ast.add_leaf(token)
 
 
     def __handle_error(self):
@@ -872,7 +984,7 @@ class RSP:
 
 
 
-    def test_parse_program(self):
+    def test___parse_program(self):
 
         while True:
 
