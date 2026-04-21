@@ -1,4 +1,4 @@
-from utils import build_lexical
+from utils import build_lexical, LAST_SET
 from engine import RDP
 from abstractions import AST
 
@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     ast = AST()
 
-    parser = RDP(lexical, ast)
+    parser = RDP(lexical, ast, LAST_SET)
 
     # parser.test_parse_program()
 

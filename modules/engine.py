@@ -324,7 +324,7 @@ class LexicalAnalyzer:
 
 class RDP:
 
-    def __init__(self, lexical:LexicalAnalyzer, abstract_syntax_tree:AST):
+    def __init__(self, lexical:LexicalAnalyzer, abstract_syntax_tree:AST, sync_table:dict):
         
         self.lexical = lexical
         self.current_token = None
@@ -333,27 +333,29 @@ class RDP:
 
         self.ast.create_root('S')
 
+        self.sync_table = sync_table
+
     def parse_program(self):
 
         self.start_parsing('PROGRAM')
 
         self.__next_token()
 
-        self.__validate_current_token_value('program')
+        self.__validate_current_token_value('program', 'PROGRAM')
 
         self.__next_token()
 
-        self.__validate_current_token_name('identifier')
+        self.__validate_current_token_name('identifier', 'PROGRAM')
 
         self.__next_token()
 
-        self.__validate_current_token_value(';')
+        self.__validate_current_token_value(';', 'PROGRAM')
         
         self.__parse_block()
 
         self.__next_token()
 
-        self.__validate_current_token_value('.')
+        self.__validate_current_token_value('.', 'PROGRAM')
 
         self.finish_parsing()
 
@@ -364,7 +366,7 @@ class RDP:
         self.__next_token()
 
         # A block needs to start with a reserved keyword. 
-        self.__validate_current_token_name('keyword')
+        self.__validate_current_token_name('keyword', 'BLOCK')
         
         # Check the next production is towards var_dec_section
         if self.current_token.value in {'int', 'boolean'}: 
@@ -391,7 +393,7 @@ class RDP:
             self.finish_parsing()
             return
         
-        self.__handle_error()
+        self.__handle_error('BLOCK')
 
     def __parse_var_dec_section(self):
 
@@ -401,7 +403,7 @@ class RDP:
 
         self.__next_token()
 
-        self.__validate_current_token_value(';')
+        self.__validate_current_token_value(';', 'VAR_DEC_SECTION')
 
         self.__parse_var_dec_section_1()
 
@@ -419,7 +421,7 @@ class RDP:
 
             self.__next_token()
 
-            self.__validate_current_token_value(';')
+            self.__validate_current_token_value(';', 'VAR_DEC_SECTION_1')
 
             self.__parse_var_dec_section_1()
 
@@ -442,7 +444,7 @@ class RDP:
         self.__next_token()
         
         if self.current_token.value not in {'boolean', 'int'}:
-            self.__handle_error()
+            self.__handle_error('TYPE')
             return
 
         self.ast.add_leaf(self.current_token)
@@ -453,7 +455,7 @@ class RDP:
 
         self.__next_token()
 
-        self.__validate_current_token_name('identifier')
+        self.__validate_current_token_name('identifier', 'ID_LIST')
 
         self.__parse_id_list_1()
 
@@ -469,7 +471,7 @@ class RDP:
 
             self.__next_token()
 
-            self.__validate_current_token_name('identifier')
+            self.__validate_current_token_name('identifier', 'ID_LIST_1')
 
             self.__parse_id_list_1()
 
@@ -503,17 +505,17 @@ class RDP:
 
         self.__next_token()
 
-        self.__validate_current_token_value('procedure')
+        self.__validate_current_token_value('procedure', 'PROC_DEC')
 
         self.__next_token()
 
-        self.__validate_current_token_name('identifier')
+        self.__validate_current_token_name('identifier', 'PROC_DEC')
 
         self.__parse_proc_dec_1()
 
         self.__next_token()
 
-        self.__validate_current_token_value(';')
+        self.__validate_current_token_value(';', 'PROC_DEC')
 
         self.__parse_block()
 
@@ -537,7 +539,7 @@ class RDP:
 
         self.__next_token()
 
-        self.__validate_current_token_value('(')
+        self.__validate_current_token_value('(', 'FORMAL_PARAMS')
 
         self.__parse_formal_params_section()
 
@@ -545,7 +547,7 @@ class RDP:
 
         self.__next_token()
 
-        self.__validate_current_token_value(')')
+        self.__validate_current_token_value(')', 'FORMAL_PARAMS')
 
         self.finish_parsing()
     
@@ -581,11 +583,11 @@ class RDP:
 
         self.__next_token()
 
-        self.__validate_current_token_value(':')
+        self.__validate_current_token_value(':', 'FORMAL_PARAMS_SECTION')
 
         self.__next_token()
 
-        self.__validate_current_token_name('identifier')
+        self.__validate_current_token_name('identifier', 'FORMAL_PARAMS_SECTION')
 
         self.finish_parsing()
 
@@ -595,7 +597,7 @@ class RDP:
 
         self.__next_token()
 
-        self.__validate_current_token_value('begin')
+        self.__validate_current_token_value('begin', 'COMP_COMMAND')
 
         self.__parse_command()
         
@@ -603,7 +605,7 @@ class RDP:
 
         self.__next_token()
 
-        self.__validate_current_token_value('end')
+        self.__validate_current_token_value('end', 'COMP_COMMAND')
 
         self.finish_parsing()
 
@@ -648,7 +650,7 @@ class RDP:
             self.finish_parsing()
             return
 
-        self.__handle_error()
+        self.__handle_error('COMMAND')
 
     def __parse_cmd_attr_tail(self):
         
@@ -677,11 +679,11 @@ class RDP:
 
             self.__next_token()
 
-            self.__validate_current_token_value(']')
+            self.__validate_current_token_value(']', 'ATTR_TAIL')
             
             self.__next_token()
 
-            self.__validate_current_token_value(':=')
+            self.__validate_current_token_value(':=', 'ATTR_TAIL')
 
             self.__parse_expr()
 
@@ -698,7 +700,7 @@ class RDP:
             self.finish_parsing()
             return
         
-        self.__handle_error()
+        self.__handle_error('ATTR_TAIL')
 
     def __parse_expr(self):
         self.start_parsing('EXPR')
@@ -808,7 +810,7 @@ class RDP:
 
             self.__next_token()
 
-            self.__validate_current_token_value(')')
+            self.__validate_current_token_value(')', 'FACTOR')
 
             self.finish_parsing()
 
@@ -825,7 +827,7 @@ class RDP:
             return
         
 
-        self.__validate_current_token_name('integer')
+        self.__validate_current_token_name('integer', 'FACTOR')
 
         self.finish_parsing()
 
@@ -843,7 +845,7 @@ class RDP:
 
             self.__next_token()
 
-            self.__validate_current_token_value(')')
+            self.__validate_current_token_value(')', 'PROC_CALL_TAIL')
 
             self.finish_parsing()
 
@@ -858,13 +860,13 @@ class RDP:
 
         self.__next_token()
 
-        self.__validate_current_token_value('if')
+        self.__validate_current_token_value('if', 'COND_COMMAND')
 
         self.__parse_expr()
 
         self.__next_token()
 
-        self.__validate_current_token_value('then')
+        self.__validate_current_token_value('then', 'COND_COMMAND')
 
         self.__parse_command()
 
@@ -890,13 +892,13 @@ class RDP:
         
         self.__next_token()
 
-        self.__validate_current_token_value('while')
+        self.__validate_current_token_value('while', 'ITER_COMMAND')
 
         self.__parse_expr()
 
         self.__next_token()
 
-        self.__validate_current_token_value('do') 
+        self.__validate_current_token_value('do', 'ITER_COMMAND') 
 
         self.__parse_command()
 
@@ -908,7 +910,7 @@ class RDP:
 
         self.__next_token()
 
-        self.__validate_current_token_name('identifier')
+        self.__validate_current_token_name('identifier', 'VAR')
 
         self.__parse_var_tail()
 
@@ -926,7 +928,7 @@ class RDP:
 
             self.__next_token()
 
-            self.__validate_current_token_value(']')
+            self.__validate_current_token_value(']', 'VAR_TAIL')
 
             return
 
@@ -964,16 +966,16 @@ class RDP:
         # Method created merely for interpretability
         self.use_cached_token = True
 
-    def __validate_current_token_value(self, value:str):
+    def __validate_current_token_value(self, value:str, non_terminal:str):
 
-        if self.current_token.value != value:
-            self.__handle_error()
+        if self.current_token.value != value or self.current_token is None:
+            self.__handle_error(non_terminal)
         
         self.ast.add_leaf(self.current_token)
 
-    def __validate_current_token_name(self, name:str):
-        if self.current_token.name != name:
-            self.__handle_error()
+    def __validate_current_token_name(self, name:str, non_terminal:str):
+        if self.current_token.name != name or self.current_token is None:
+            self.__handle_error(non_terminal)
         
         self.ast.add_leaf(self.current_token)
 
@@ -1000,10 +1002,21 @@ class RDP:
         self.ast.add_leaf(token)
 
 
-    def __handle_error(self):
-        # !!!
-        pass
+    def __handle_error(self, non_terminal:str):
+        
+        sync_tokens = self.sync_table.get(non_terminal)
 
+        print(
+            "[ERRO SINTÁTICO]"
+            f"Localização: ({self.lexical.lin},{self.lexical.col})"
+            f"Token inesperado '{self.current_token.value}' em <{non_terminal}>. "
+            f"Tokens de sincronização: {sync_tokens}"
+        )
+
+        while self.current_token is not None:
+            if self.current_token.value in sync_tokens:
+                break
+            self.current_token = self.lexical.get_next_token()
 
 
     def test___parse_program(self):
