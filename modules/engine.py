@@ -1005,19 +1005,29 @@ class RDP:
 
     def __handle_error(self, non_terminal:str):
         
+        # Pega os tokens de sincronização para o não terminal sendo expandido
         sync_tokens = self.sync_table.get(non_terminal)
 
         print(
             "[ERRO SINTÁTICO]"
             f"Localização: ({self.lexical.lin},{self.lexical.col})"
-            f"Token inesperado '{self.current_token.value}' em <{non_terminal}>. "
+            f"Token inesperado '{self.current_token.name}' em <{non_terminal}>. "
             f"Tokens de sincronização: {sync_tokens}"
         )
 
+        # No caso de um erro, enquanto não chegamos ao fim do arquivo...
         while self.current_token is not None:
-            if self.current_token.value in sync_tokens:
+
+            # Verificar se o token atual é um token de sincronização 
+            if self.current_token.name in sync_tokens:
+                print('TOKEN DE SINCRONIZAÇÃO ENCONTRADO: ', self.current_token.name)
+                # Se for um token de sincronização, continuar o processamento normalmente a partir do não terminal superior
+                
                 break
-            self.current_token = self.lexical.get_next_token()
+            else:
+                print('TOKEN CONSUMIDO: ', self.current_token.name)
+                # Caso contrário, pegar o próximo token
+                self.current_token = self.lexical.get_next_token()
 
 
     def test___parse_program(self):

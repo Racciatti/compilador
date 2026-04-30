@@ -3,54 +3,74 @@ from registry import SymbolicTable, Element
 from formal_grammar import Alphabet, Symbol
 from engine import LexicalAnalyzer, RDP
 
-LAST_SET = {
-    "S":                    {"."}, 
-    "BLOCK":                {"end"},
-
-    "VAR_DEC_SECTION":      {";"},
-    "VAR_DEC_SECTION_1":    {";"},
-    "VAR_DEC":              {"ID"},
-
-    "ID_LIST":              {"ID"},
-    "ID_LIST_1":            {"ID"},
-
-    "SUBR_DEC_SECTION":     {";"},
-    "PROC_DEC":             {"end"},           # último de BLOCK
-    "PROC_DEC_1":           {")"},
-
-    "FORMAL_PARAMS":        {")"},
-    "FORMAL_PARAMS_1":      {"ID"},            # último de FORMAL_PARAMS_SECTION
-    "FORMAL_PARAMS_SECTION":{"ID"},
-
-    "COMP_COMMAND":         {"end"},
-    "COMP_COMMAND_1":       {"ID", "]", "NUM", ")", "end"},  # = LAST(COMMAND)
-
-    "COMMAND":              {"ID", "]", "NUM", ")", "end"},
-    "CMD_ATTR_TAIL":        {"ID", "]", "NUM", ")"},
-    "ATTR_TAIL":            {"ID", "]", "NUM", ")"},         # = LAST(EXPR)
-    "PROC_CALL_TAIL":       {")"},
-
-    "COND_COMMAND":         {"ID", "]", "NUM", ")", "end"},  # = LAST(COMMAND)
-    "COND_COMMAND_1":       {"ID", "]", "NUM", ")", "end"},  # = LAST(COMMAND)
-    "ITER_COMMAND":         {"ID", "]", "NUM", ")", "end"},  # = LAST(COMMAND)
-
-    "EXPR":                 {"ID", "]", "NUM", ")"},
-    "EXPR_1":               {"ID", "]", "NUM", ")"},         # = LAST(SIMPLE_EXPR)
-    "REL":                  {"=", "<>", "<", "<=", ">=", ">"},
-
-    "SIMPLE_EXPR":          {"ID", "]", "NUM", ")"},
-    "SIMPLE_EXPR_1":        {"ID", "]", "NUM", ")"},         # = LAST(TERM)
-
-    "TERM":                 {"ID", "]", "NUM", ")"},
-    "TERM_1":               {"ID", "]", "NUM", ")"},         # = LAST(FACTOR)
-
-    "FACTOR":               {"ID", "]", "NUM", ")"},
-    "VAR":                  {"ID", "]"},
-    "VAR_TAIL":             {"]"},
-
-    "EXPR_LIST":            {"ID", "]", "NUM", ")"},
-    "EXPR_LIST_1":          {"ID", "]", "NUM", ")"},
-}
+LAST_SET = {'S': {'dot'},
+ 
+ 'BLOCK': {'end'},
+ 
+ 'VAR_DEC_SECTION': {'semicolon'},
+ 
+ 'VAR_DEC_SECTION_1': {'semicolon'},
+ 
+ 'VAR_DEC': {'identifier'},
+ 
+ 'ID_LIST': {'identifier'},
+ 
+ 'ID_LIST_1': {'identifier'},
+ 
+ 'SUBR_DEC_SECTION': {'semicolon'},
+ 
+ 'PROC_DEC': {'end'},
+ 
+ 'PROC_DEC_1': {'close_p'},
+ 
+ 'FORMAL_PARAMS': {'close_p'},
+ 
+ 'FORMAL_PARAMS_1': {'identifier'},
+ 
+ 'FORMAL_PARAMS_SECTION': {'identifier'},
+ 
+ 'COMP_COMMAND': {'end'},
+ 
+ 'COMP_COMMAND_1': {'integer', 'close_b', 'close_p', 'end', 'identifier'},
+ 
+ 'COMMAND': {'integer', 'close_b', 'close_p', 'end', 'identifier'},
+ 
+ 'CMD_ATTR_TAIL': {'integer', 'close_b', 'close_p', 'identifier'},
+ 
+ 'ATTR_TAIL': {'integer', 'close_b', 'close_p', 'identifier'},
+ 
+ 'PROC_CALL_TAIL': {'close_p'},
+ 
+ 'COND_COMMAND': {'integer', 'close_b', 'close_p', 'end', 'identifier'},
+ 
+ 'COND_COMMAND_1': {'integer', 'close_b', 'close_p', 'end', 'identifier'},
+ 
+ 'ITER_COMMAND': {'integer', 'close_b', 'close_p', 'end', 'identifier'},
+ 
+ 'EXPR': {'integer', 'close_b', 'close_p', 'identifier'},
+ 
+ 'EXPR_1': {'integer', 'close_b', 'close_p', 'identifier'},
+ 
+ 'REL': {'diff', 'geq', 'get', 'op_eq', 'seq', 'smt'},
+ 
+ 'SIMPLE_EXPR': {'integer', 'close_b', 'close_p', 'identifier'},
+ 
+ 'SIMPLE_EXPR_1': {'integer', 'close_b', 'close_p', 'identifier'},
+ 
+ 'TERM': {'integer', 'close_b', 'close_p', 'identifier'},
+ 
+ 'TERM_1': {'integer', 'close_b', 'close_p', 'identifier'},
+ 
+ 'FACTOR': {'integer', 'close_b', 'close_p', 'identifier'},
+ 
+ 'VAR': {'close_b', 'identifier'},
+ 
+ 'VAR_TAIL': {'close_b'},
+ 
+ 'EXPR_LIST': {'integer', 'close_b', 'close_p', 'identifier'},
+ 
+ 'EXPR_LIST_1': {'integer', 'close_b', 'close_p', 'identifier'}
+ }
 
 TOKENS_DICT = {
     '+':    'op_sum',
