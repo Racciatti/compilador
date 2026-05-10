@@ -7,7 +7,7 @@ class Element:
 
     def __init__(self, element_type:str, identifier:str, element_subtype:str=None, value = None):
 
-        if element_type not in ['keyword', 'variable']:
+        if element_type not in ['keyword', 'identifier']:
             raise ValueError(f'"element_type" parameter must be one of ["keyword", "variable"], but "{element_type}" was received')
         
         self.type = element_type
@@ -51,7 +51,17 @@ class SymbolicTable:
 
         if identifier in self.elements:
 
-            if self.elements[identifier].identifier == identifier:
+            if self.elements[identifier].type == 'keyword':
+
+                return True
+            
+        return False
+
+    def is_identifier(self, identifier:str)->bool:
+
+        if identifier in self.elements:
+
+            if self.elements[identifier].type == 'identifier':
 
                 return True
             
