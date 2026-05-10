@@ -3,74 +3,170 @@ from registry import SymbolicTable, Element
 from formal_grammar import Alphabet, Symbol
 from engine import LexicalAnalyzer, RDP
 
-LAST_SET = {'S': {'dot'},
- 
- 'BLOCK': {'end'},
- 
- 'VAR_DEC_SECTION': {'semicolon'},
- 
- 'VAR_DEC_SECTION_1': {'semicolon'},
- 
- 'VAR_DEC': {'identifier'},
- 
- 'ID_LIST': {'identifier'},
- 
- 'ID_LIST_1': {'identifier'},
- 
- 'SUBR_DEC_SECTION': {'semicolon'},
- 
- 'PROC_DEC': {'end'},
- 
- 'PROC_DEC_1': {'close_p'},
- 
- 'FORMAL_PARAMS': {'close_p'},
- 
- 'FORMAL_PARAMS_1': {'identifier'},
- 
- 'FORMAL_PARAMS_SECTION': {'identifier'},
- 
- 'COMP_COMMAND': {'end'},
- 
- 'COMP_COMMAND_1': {'integer', 'close_b', 'close_p', 'end', 'identifier'},
- 
- 'COMMAND': {'integer', 'close_b', 'close_p', 'end', 'identifier'},
- 
- 'CMD_ATTR_TAIL': {'integer', 'close_b', 'close_p', 'identifier'},
- 
- 'ATTR_TAIL': {'integer', 'close_b', 'close_p', 'identifier'},
- 
- 'PROC_CALL_TAIL': {'close_p'},
- 
- 'COND_COMMAND': {'integer', 'close_b', 'close_p', 'end', 'identifier'},
- 
- 'COND_COMMAND_1': {'integer', 'close_b', 'close_p', 'end', 'identifier'},
- 
- 'ITER_COMMAND': {'integer', 'close_b', 'close_p', 'end', 'identifier'},
- 
- 'EXPR': {'integer', 'close_b', 'close_p', 'identifier'},
- 
- 'EXPR_1': {'integer', 'close_b', 'close_p', 'identifier'},
- 
- 'REL': {'diff', 'geq', 'get', 'op_eq', 'seq', 'smt'},
- 
- 'SIMPLE_EXPR': {'integer', 'close_b', 'close_p', 'identifier'},
- 
- 'SIMPLE_EXPR_1': {'integer', 'close_b', 'close_p', 'identifier'},
- 
- 'TERM': {'integer', 'close_b', 'close_p', 'identifier'},
- 
- 'TERM_1': {'integer', 'close_b', 'close_p', 'identifier'},
- 
- 'FACTOR': {'integer', 'close_b', 'close_p', 'identifier'},
- 
- 'VAR': {'close_b', 'identifier'},
- 
- 'VAR_TAIL': {'close_b'},
- 
- 'EXPR_LIST': {'integer', 'close_b', 'close_p', 'identifier'},
- 
- 'EXPR_LIST_1': {'integer', 'close_b', 'close_p', 'identifier'}
- }
+LAST_SET = {
+    'PROGRAM': {Token('dot', '.', -1, -1)},
+    
+    'BLOCK': {Token('keyword', 'end', -1, -1)},
+    
+    'VAR_DEC_SECTION': {Token('semicolon', ';', -1, -1)},
+    
+    'VAR_DEC_SECTION_1': {Token('semicolon', ';', -1, -1)},
+    
+    'VAR_DEC': {Token('identifier', None, -1, -1)},
+    
+    'ID_LIST': {Token('identifier', None, -1, -1)},
+    
+    'ID_LIST_1': {Token('identifier', None, -1, -1)},
+    
+    'SUBR_DEC_SECTION': {Token('semicolon', ';', -1, -1)},
+    
+    'PROC_DEC': {Token('keyword', 'end', -1, -1)},
+    
+    'PROC_DEC_1': {Token('close_p', ')', -1, -1)},
+    
+    'FORMAL_PARAMS': {Token('close_p', ')', -1, -1)},
+    
+    'FORMAL_PARAMS_1': {Token('identifier', None, -1, -1)},
+    
+    'FORMAL_PARAMS_SECTION': {Token('identifier', None, -1, -1)},
+    
+    'COMP_COMMAND': {Token('keyword', 'end', -1, -1)},
+    
+    'COMP_COMMAND_1': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('keyword', 'end', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'COMMAND': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('keyword', 'end', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'CMD_ATTR_TAIL': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'ATTR_TAIL': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'PROC_CALL_TAIL': {Token('close_p', ')', -1, -1)},
+    
+    'COND_COMMAND': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('keyword', 'end', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'COND_COMMAND_1': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('keyword', 'end', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'ITER_COMMAND': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('keyword', 'end', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'EXPR': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'EXPR_1': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'REL': {
+        Token('diff', '<>', -1, -1), 
+        Token('geq', '>=', -1, -1), 
+        Token('get', '>', -1, -1), 
+        Token('op_eq', '=', -1, -1), 
+        Token('seq', '<=', -1, -1), 
+        Token('smt', '<', -1, -1)
+    },
+    
+    'SIMPLE_EXPR': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'SIMPLE_EXPR_1': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'TERM': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'TERM_1': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'FACTOR': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'VAR': {
+        Token('close_b', ']', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'VAR_TAIL': {Token('close_b', ']', -1, -1)},
+    
+    'EXPR_LIST': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    },
+    
+    'EXPR_LIST_1': {
+        Token('integer', None, -1, -1), 
+        Token('close_b', ']', -1, -1), 
+        Token('close_p', ')', -1, -1), 
+        Token('identifier', None, -1, -1)
+    }
+}
 
 TOKENS_DICT = {
     '+':    'op_sum',
@@ -207,8 +303,9 @@ ALPHABET_SYMBOLS = [
         # Symbol("/", "divider",      'operator'),
 ]
 
-KEYWORD_IDENTIFIERS = ['program','procedure','begin','end','read','write','var','if','then','else','while','do','int','boolean','true','false','not','and','or']
- 
+KEYWORD_IDENTIFIERS = ['program','procedure','begin','end','var','if','then','else','while','do','int','boolean','not','and','or']
+PREDECLARED_IDENTIFIERS = ['read', 'write', 'true', 'false']
+
 DISPLAY_LEXEMES = {value: key for key, value in TOKENS_DICT.items() if len(key) > 1}
 
 
@@ -217,7 +314,9 @@ def build_alphabet() -> Alphabet:
 
 def build_symbolic_table()->SymbolicTable:
 
-    elements = [Element(element_type='keyword', identifier=id) for id in KEYWORD_IDENTIFIERS]
+    keyword_elements = [Element(element_type='keyword', identifier=id) for id in KEYWORD_IDENTIFIERS]
+    predeclared_elements = [Element(element_type='identifier', identifier=name) for name in PREDECLARED_IDENTIFIERS]
+    elements = keyword_elements + predeclared_elements
 
     return SymbolicTable(elements)
 
