@@ -887,6 +887,8 @@ class RDP:
             self.ast.add_leaf(self.current_token)
             
             self.__parse_command()
+
+            return
         
         self.__cache_token()
     
@@ -972,6 +974,7 @@ class RDP:
 
     def __validate_current_token_value(self, value:str, non_terminal:str):
         print('QUERO: ', value)
+        
         if self.current_token.value != value or self.current_token is None:
             self.__handle_error(non_terminal)
         
@@ -1014,18 +1017,22 @@ class RDP:
         # Pega os tokens de sincronização para o não terminal sendo expandido
         sync_tokens = self.sync_table.get(non_terminal)
 
+        # Constrói hash dos nomes e valores dos tokens
+        sync_tokens_names = {token.name : token for token in sync_tokens}
+        sync_tokens_values = {token.value : token for token in sync_tokens}
+
         print(
             "[ERRO SINTÁTICO]"
             f"Localização: ({self.lexical.lin},{self.lexical.col})"
-            f"Token inesperado '{self.current_token.name}' em <{non_terminal}>. "
-            f"Tokens de sincronização: {sync_tokens}"
+            f"Token inesperado '{self.current_token.name}' em <{non_terminal}>:\n\n{self.current_token.__str__()} "
+            f"Tokens de sincronização: {sync_tokens_names}"
         )
 
         # No caso de um erro, enquanto não chegamos ao fim do arquivo...
         while self.current_token is not None:
 
             # Verificar se o token atual é um token de sincronização 
-            if self.current_token.name in sync_tokens or self.current_token.value in sync_tokens:
+            if self.current_token.name in sync_tokens_names or self.current_token.value in sync_tokens_values:
                 print('TOKEN DE SINCRONIZAÇÃO ENCONTRADO: ', self.current_token.name)
                 # Se for um token de sincronização, continuar o processamento normalmente a partir do não terminal superior
                 
