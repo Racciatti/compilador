@@ -492,6 +492,12 @@ class RDP:
             
             self.__parse_proc_dec()
 
+            self.__next_token()
+
+            self.__validate_current_token_value(';', 'SUBR_DEC_SECTION')
+
+            self.__parse_subr_dec_section()
+
             self.finish_parsing()
             return
         
@@ -965,13 +971,14 @@ class RDP:
         self.use_cached_token = True
 
     def __validate_current_token_value(self, value:str, non_terminal:str):
-
+        print('QUERO: ', value)
         if self.current_token.value != value or self.current_token is None:
             self.__handle_error(non_terminal)
         
         self.ast.add_leaf(self.current_token)
 
     def __validate_current_token_name(self, name:str, non_terminal:str):
+        print('QUERO: ', name)
         if self.current_token.name != name or self.current_token is None:
             self.__handle_error(non_terminal)
         
