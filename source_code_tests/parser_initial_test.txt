@@ -3,6 +3,6 @@ begin
 end 
 var a;
 
-bool int := 5 * 3
+bool int := 5 * 3;
 
 bool a true;

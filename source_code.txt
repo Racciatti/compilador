@@ -1,20 +1,79 @@
-// Caso de teste N° 1 para o analisador sintático: Tratamento de erros
+program calculadora ;
 
-program MyProgram;
-procedure myProcedure(var a, b : integer; c, d : bool);
+int a, b, resultado, resto, contador;
+
+boolean par, positivo, continuar;
+
+procedure trocar ( var x : int ; var y : int ) ;
+int temp;
+begin
+    temp := x;
+    x := y;
+    y := temp
+end;
+
+procedure fatorial ( n : int ) ;
+int fat, i;
 
 begin
+    fat := 1;
+    i := 1;
 
-a:=false
+    while i <= n do
+    
+    begin
+        
+        fat := fat * i;
+        i := i + 1
+    end;
+    
+    write ( fat )
 
-end
+end;
 
-int a, b;
-begin 
+procedure classificar ( var n : int ; positivo : boolean ) ;
+begin
+    if positivo then
+        write ( n )
+    else
+        n := - n
+end;
 
-b:= 3++5;
+begin
+    read ( a );
+    read ( b );
 
-a:=b
+    if a < b then
+        trocar ( a , b );
+
+    resultado := a + b * 2;
+    resto := resultado - ( resultado div b ) * b;
+
+    par := resto = 0;
+    positivo := (a > 0) and (b > 0);
+
+    if par and positivo then
+        write ( resultado )
+    else
+        if par then
+            write ( resto )
+        else
+            write (a);
+
+    continuar := true;
+    contador := 0;
+
+    while continuar do
+    begin
+        fatorial ( contador );
+        contador := contador + 1;
+        continuar := contador < 5
+    end;
+
+    classificar ( a , positivo );
+
+    resultado := ( a + b ) * ( a - b );
+    write ( resultado , resto , contador )
 
 end
 .

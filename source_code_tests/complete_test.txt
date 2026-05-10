@@ -58,7 +58,7 @@ begin
         if par then
             write ( resto )
         else
-            write ( a );
+            write (a);
 
     continuar := true;
     contador := 0;
