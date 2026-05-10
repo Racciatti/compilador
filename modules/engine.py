@@ -986,7 +986,6 @@ class RDP:
         """
         if not self.use_cached_token:
             self.current_token = self.lexical.get_next_token()
-            print(self.current_token.__str__())
             return
         
         self.use_cached_token = False
@@ -1004,7 +1003,9 @@ class RDP:
 
 
     def __handle_error(self, non_terminal:str):
-        
+        # Reseta o flag de cache para retomada correta da análise sintática
+        self.use_cached_token = False
+
         # Pega os tokens de sincronização para o não terminal sendo expandido
         sync_tokens = self.sync_table.get(non_terminal)
 
@@ -1019,7 +1020,7 @@ class RDP:
         while self.current_token is not None:
 
             # Verificar se o token atual é um token de sincronização 
-            if self.current_token.name in sync_tokens:
+            if self.current_token.name in sync_tokens or self.current_token.value in sync_tokens:
                 print('TOKEN DE SINCRONIZAÇÃO ENCONTRADO: ', self.current_token.name)
                 # Se for um token de sincronização, continuar o processamento normalmente a partir do não terminal superior
                 
@@ -1035,8 +1036,6 @@ class RDP:
         while True:
 
             self.__next_token()
-
-            print(self.current_token.__str__())
 
             if self.current_token is None:
                 return
