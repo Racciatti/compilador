@@ -492,7 +492,7 @@ class RDP:
             
             self.__parse_proc_dec()
 
-            self.finish_parsing
+            self.finish_parsing()
             return
         
         self.__cache_token()
@@ -585,9 +585,7 @@ class RDP:
 
         self.__validate_current_token_value(':', 'FORMAL_PARAMS_SECTION')
 
-        self.__next_token()
-
-        self.__validate_current_token_name('identifier', 'FORMAL_PARAMS_SECTION')
+        self.__parse_type()
 
         self.finish_parsing()
 
