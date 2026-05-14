@@ -80,3 +80,9 @@ class AST():
         self.current_node.validate()
         
         self.current_node = self.current_node.father
+    
+    def invalidate_current_node(self):
+        print(f'AST: marking error on current node "{self.current_node.name}" and moving to father "{self.current_node.father.name}"')
+        self.current_node.mark_error()
+        self.current_node = self.current_node.father
+

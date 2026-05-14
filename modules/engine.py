@@ -394,6 +394,7 @@ class RDP:
             return
         
         self.__handle_error('BLOCK')
+        self.cancel_parsing()
 
     def __parse_var_dec_section(self):
 
@@ -655,6 +656,7 @@ class RDP:
             return
 
         self.__handle_error('COMMAND')
+        self.cancel_parsing()
 
     def __parse_cmd_attr_tail(self):
         
@@ -705,6 +707,7 @@ class RDP:
             return
         
         self.__handle_error('ATTR_TAIL')
+        self.cancel_parsing()
 
     def __parse_expr(self):
         self.start_parsing('EXPR')
@@ -1009,6 +1012,9 @@ class RDP:
 
     def finish_parsing(self):
         self.ast.validate_current_node()
+        
+    def cancel_parsing(self):
+        self.ast.invalidate_current_node()
 
     def validate_token(self, token:Token):
         self.ast.add_leaf(token)
