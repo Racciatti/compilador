@@ -1,0 +1,7 @@
+program exemplo ;
+int x ;
+$$$
+int y ;
+begin
+  x := 1
+end.

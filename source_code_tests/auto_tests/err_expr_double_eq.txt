@@ -1,0 +1,4 @@
+program exemplo ;
+begin
+  if x == 1 then x := 2
+end.

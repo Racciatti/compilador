@@ -7,7 +7,8 @@ boolean par, positivo, continuar;
 procedure trocar ( var x : int ; var y : int ) ;
 int temp;
 begin
-    temp := x;
+    // ERRORS INSERTED HERE
+    temp := x
     x := y;
     y := temp
 end;
@@ -33,20 +34,22 @@ end;
 
 procedure classificar ( var n : int ; positivo : boolean ) ;
 begin
-    if positivo then
+    // ERRORS INSERTED HERE
+    fi positivo then
         write ( n )
     else
         n := - n
 end;
-
+ 
 begin
     read ( a );
     read ( b );
 
     if a < b then
         trocar ( a , b );
-
-    resultado := a + b * 2;
+    
+    // ERRORS INSERTED HERE
+    resultado := a + b *** 2;
     resto := resultado - ( resultado div b ) * b;
 
     par := resto = 0;
@@ -57,7 +60,8 @@ begin
     else
         if par then
             write ( resto )
-        else
+    // ERRORS INSERTED HERE
+        elles
             write (a);
 
     continuar := true;

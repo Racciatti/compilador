@@ -24,14 +24,14 @@ class Token:
 
 class AST_Node:
 
-    def __init__(self, name:str, father:AST_Node, status:str = 'invalid', children:list = []):
+    def __init__(self, name:str, father:'AST_Node', status:str = 'invalid', children:list = None):
         
         self.name = name
         self.father = father
 
         self.status = status if status in {'invalid', 'valid', 'error'} else 'invalid'
 
-        self.children = children
+        self.children = children if children is not None else []
 
     def add_child(self, node:AST_Node):
         self.children.append(node)

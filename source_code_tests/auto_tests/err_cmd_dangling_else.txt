@@ -1,0 +1,4 @@
+program exemplo ;
+begin
+  else x := 1
+end.

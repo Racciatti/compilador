@@ -1,0 +1,8 @@
+program exemplo ;
+procedure () ;
+begin
+  x := 1
+end ;
+begin
+  x := 1
+end.

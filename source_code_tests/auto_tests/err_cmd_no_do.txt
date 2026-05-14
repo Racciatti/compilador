@@ -1,0 +1,4 @@
+program exemplo ;
+begin
+  while x < 10 begin x := 2 end
+end.
