@@ -973,19 +973,21 @@ class RDP:
         self.use_cached_token = True
 
     def __validate_current_token_value(self, value:str, non_terminal:str):
-        print('QUERO: ', value)
-        
-        if self.current_token.value != value or self.current_token is None:
+
+
+        if self.current_token is None or self.current_token.value != value:
             self.__handle_error(non_terminal)
         
-        self.ast.add_leaf(self.current_token)
+        if self.current_token is not None:
+            self.ast.add_leaf(self.current_token)
 
     def __validate_current_token_name(self, name:str, non_terminal:str):
-        print('QUERO: ', name)
-        if self.current_token.name != name or self.current_token is None:
+        
+        if self.current_token is None or self.current_token.name != name:
             self.__handle_error(non_terminal)
         
-        self.ast.add_leaf(self.current_token)
+        if self.current_token is not None:
+            self.ast.add_leaf(self.current_token)
 
     def __next_token(self):
         """
@@ -994,6 +996,8 @@ class RDP:
         """
         if not self.use_cached_token:
             self.current_token = self.lexical.get_next_token()
+            if self.current_token is None:
+                self.current_token = Token('EOF', 'EOF', self.lexical.lin, self.lexical.col)
             return
         
         self.use_cached_token = False
@@ -1015,21 +1019,24 @@ class RDP:
         self.use_cached_token = False
 
         # Pega os tokens de sincronização para o não terminal sendo expandido
-        sync_tokens = self.sync_table.get(non_terminal)
+        sync_tokens = self.sync_table.get(non_terminal, set())
 
         # Constrói hash dos nomes e valores dos tokens
         sync_tokens_names = {token.name : token for token in sync_tokens}
         sync_tokens_values = {token.value : token for token in sync_tokens}
 
+        token_name = self.current_token.name if self.current_token else 'EOF'
+        token_str = self.current_token.__str__() if self.current_token else 'EOF'
+        
         print(
             "[ERRO SINTÁTICO]"
             f"Localização: ({self.lexical.lin},{self.lexical.col})"
-            f"Token inesperado '{self.current_token.name}' em <{non_terminal}>:\n\n{self.current_token.__str__()} "
+            f"Token inesperado '{token_name}' em <{non_terminal}>:\n\n{token_str} "
             f"Tokens de sincronização: {sync_tokens_names}"
         )
 
         # No caso de um erro, enquanto não chegamos ao fim do arquivo...
-        while self.current_token is not None:
+        while self.current_token is not None and self.current_token.name != 'EOF':
 
             # Verificar se o token atual é um token de sincronização 
             if self.current_token.name in sync_tokens_names or self.current_token.value in sync_tokens_values:
@@ -1041,6 +1048,8 @@ class RDP:
                 print('TOKEN CONSUMIDO: ', self.current_token.name)
                 # Caso contrário, pegar o próximo token
                 self.current_token = self.lexical.get_next_token()
+                if self.current_token is None:
+                    self.current_token = Token('EOF', 'EOF', self.lexical.lin, self.lexical.col)
 
 
     def test___parse_program(self):
