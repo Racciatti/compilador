@@ -1,28 +1,3 @@
-"""
-Pipeline principal do compilador LALG.
-
-Ponto de entrada CLI:
-  python3 modules/pseudomain.py arquivo.lalg
-
-Função de pipeline para uso programático (testes end-to-end):
-  compilar_e_executar(codigo_fonte: str, entrada: list[int] = None) -> dict
-
-Pipeline (Seção 7 do plano):
-  1. Construir léxico + tabela de símbolos pré-carregada + Diagnostics + CodeGenerator
-  2. Rodar RDP.parse_program() (semântica + codegen embutidos)
-  3. Se diagnostics.has_errors(): retornar com erros, sem executar
-  4. Se não há erros E _tem_procedure == False: instanciar MEPA_VM e executar
-  5. Se não há erros E _tem_procedure == True: retornar diagnóstico info, sem executar
-
-Retorno de compilar_e_executar:
-  {
-    'diagnostics': lista de dicts {fase, mensagem, linha, coluna},
-    'saida': string com a saída produzida (vazia se não executou),
-    'codigo': lista de strings representando o bytecode gerado ([] se não gerado),
-    'sucesso': bool (True se compilação e execução OK),
-  }
-"""
-
 import io
 import sys
 import os
@@ -32,18 +7,8 @@ from contextlib import redirect_stdout
 def compilar_e_executar(codigo_fonte: str, entrada: list = None) -> dict:
     """
     Roda o pipeline completo: léxico → sintático → semântico → codegen → interpretação.
-
-    Parâmetros:
-      codigo_fonte: código-fonte LALG como string.
-      entrada: lista de inteiros para LEIT/read() (se None, lê de stdin).
-
-    Retorna dict com:
-      'diagnostics': lista de dicts {fase, mensagem, linha, coluna}
-      'saida': string com a saída produzida (vazia se não executou)
-      'codigo': lista de strings representando o bytecode gerado ([] se não gerado)
-      'sucesso': bool (True se compilação e execução OK)
+    Retorna dict com 'diagnostics', 'saida', 'codigo' e 'sucesso'.
     """
-    # Garante que modules/ está no sys.path quando este módulo é importado de fora
     _modules_dir = os.path.dirname(os.path.abspath(__file__))
     if _modules_dir not in sys.path:
         sys.path.insert(0, _modules_dir)
@@ -55,9 +20,6 @@ def compilar_e_executar(codigo_fonte: str, entrada: list = None) -> dict:
     from codegen import CodeGenerator
     from interpreter import MEPA_VM
 
-    # ------------------------------------------------------------------
-    # Etapa 1: construir componentes
-    # ------------------------------------------------------------------
     diag = Diagnostics()
     symtable = build_symbolic_table()
     cg = CodeGenerator()
@@ -79,36 +41,22 @@ def compilar_e_executar(codigo_fonte: str, entrada: list = None) -> dict:
         code_generator=cg,
     )
 
-    # ------------------------------------------------------------------
-    # Etapa 2: parse (léxico + sintático + semântico + codegen)
-    # Suprime o print de debug do token que existe em engine.py (__next_token).
-    # Captura stdout para detectar erros sintáticos que o RDP imprime (não registra
-    # em Diagnostics) — "[ERRO SINTÁTICO]" na saída é convertido em diagnóstico.
-    # ------------------------------------------------------------------
+    # suprime prints de debug do parser; captura erros sintáticos impressos no stdout
     buf_ruido = io.StringIO()
     with redirect_stdout(buf_ruido):
         try:
             parser.parse_program()
         except Exception as exc:
-            # Erros de parser não tratados internamente chegam aqui como fallback.
             diag.add('sintatica', f'[ERRO SINTÁTICO] Exceção durante o parse: {exc}')
 
-    # Converte mensagens sintáticas do stdout para entradas de diagnóstico
     saida_parser = buf_ruido.getvalue()
     for linha_ruido in saida_parser.splitlines():
         if '[ERRO SINTÁTICO]' in linha_ruido:
             diag.add('sintatica', linha_ruido.strip())
 
-    # ------------------------------------------------------------------
-    # Etapa 3: verificar diagnósticos — qualquer erro impede execução
-    # ------------------------------------------------------------------
-    # Erros reais são de fase 'lexica', 'sintatica' ou 'semantica'.
-    # Fase 'info' e 'semantica_aviso' não bloqueiam, mas procedure bloqueia execução
-    # (a flag _tem_procedure já cuidou disso na codegen — C estará vazio).
     fases_de_erro = {'lexica', 'sintatica', 'semantica'}
     tem_erro = any(e['fase'] in fases_de_erro for e in diag.errors)
 
-    # Bytecode disponível apenas se não houve erros e não tem procedure
     codigo_gerado = [str(instr) for instr in cg.C]
 
     if tem_erro:
@@ -119,11 +67,7 @@ def compilar_e_executar(codigo_fonte: str, entrada: list = None) -> dict:
             'sucesso': False,
         }
 
-    # ------------------------------------------------------------------
-    # Etapa 4a: programa com procedure — informa mas não executa
-    # ------------------------------------------------------------------
     if parser._tem_procedure:
-        # Diagnóstico 'info' já foi adicionado pelo RDP.parse_program().
         return {
             'diagnostics': list(diag.errors),
             'saida': '',
@@ -131,11 +75,7 @@ def compilar_e_executar(codigo_fonte: str, entrada: list = None) -> dict:
             'sucesso': False,
         }
 
-    # ------------------------------------------------------------------
-    # Etapa 4b: executar bytecode na MEPA_VM
-    # ------------------------------------------------------------------
     if not cg.C:
-        # Código vazio sem erro e sem procedure: situação inesperada; retornar sem executar.
         return {
             'diagnostics': list(diag.errors),
             'saida': '',
@@ -165,10 +105,6 @@ def compilar_e_executar(codigo_fonte: str, entrada: list = None) -> dict:
         'sucesso': True,
     }
 
-
-# ------------------------------------------------------------------
-# CLI: python3 modules/pseudomain.py arquivo.lalg
-# ------------------------------------------------------------------
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

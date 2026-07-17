@@ -1,8 +1,5 @@
-VALID_CATEGORIES = {'tipo', 'const', 'proc', 'nome_prog', 'var', 'param'}
-
-
 class Element:
-    """Entry in the symbolic table (plan Section 3 schema)."""
+    """Entrada na tabela de símbolos."""
 
     def __init__(
         self,
@@ -16,18 +13,6 @@ class Element:
         num_params: int = 0,
         tipos_params: list = None,
     ):
-        if categoria not in VALID_CATEGORIES:
-            raise ValueError(
-                f'[ERRO] Categoria inválida: "{categoria}". '
-                f'Valores válidos: {sorted(VALID_CATEGORIES)}'
-            )
-
-        if tipo is not None and tipo not in {'integer', 'boolean'}:
-            raise ValueError(
-                f'[ERRO] Tipo semântico inválido: "{tipo}". '
-                f'Valores válidos: "integer", "boolean" ou None.'
-            )
-
         self.identificador = identificador
         self.categoria = categoria
         self.tipo = tipo
@@ -47,22 +32,18 @@ class Element:
 
 class SymbolicTable:
     """
-    Global symbolic table with per-entry scope level (plan Decision 3).
-    Entries are stored in insertion order; search walks backwards (highest level first).
+    Tabela de símbolos global com nível de escopo por entrada (Decisão 3 do plano).
+    Entradas em ordem de inserção; busca percorre de trás pra frente (nível mais alto primeiro).
     """
 
     def __init__(self):
         self._entries: list = []
 
     def inserir(self, elemento: 'Element') -> None:
-        """Inserts an element. Duplicate checking is the semantic analyser's responsibility."""
         self._entries.append(elemento)
 
     def busca(self, identificador: str, nivel_maximo: int = None) -> 'Element | None':
-        """
-        Searches from highest level down to 0.
-        If nivel_maximo is given, entries with nivel > nivel_maximo are skipped.
-        """
+        # busca do nivel mais alto ate 0
         for entry in reversed(self._entries):
             if entry.identificador != identificador:
                 continue
@@ -72,18 +53,16 @@ class SymbolicTable:
         return None
 
     def busca_nivel_atual(self, identificador: str, nivel_atual: int) -> 'Element | None':
-        """Searches only the exact scope level given (for duplicate detection in the same scope)."""
+        # só no nível exato, para detectar redeclaração no mesmo escopo
         for entry in self._entries:
             if entry.identificador == identificador and entry.nivel == nivel_atual:
                 return entry
         return None
 
     def remover_nivel(self, nivel: int) -> None:
-        """Removes all entries whose nivel matches the given level."""
         self._entries = [e for e in self._entries if e.nivel != nivel]
 
     def marcar_utilizada(self, identificador: str) -> None:
-        """Sets utilizada=True on the most visible entry for the given identifier."""
         for entry in reversed(self._entries):
             if entry.identificador == identificador:
                 entry.utilizada = True

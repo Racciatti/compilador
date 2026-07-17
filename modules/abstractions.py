@@ -3,12 +3,7 @@ from __future__ import annotations
 from formal_grammar import NonTerminal
 
 class Token:
-    """
-    A token can be formed by one or more symbols, it is the atomic unit extracted from the source code,
-    from a lexical perspective.
-
-    Each token has a name, value, and the position in which it was found in the source code (col, lin)
-    """
+    """Token extraído do código-fonte."""
 
     def __init__(self, name:str, value:str, col:int, lin:int):
         self.name = name
@@ -27,7 +22,7 @@ class Token:
 class AST_Node:
 
     def __init__(self, name:str, father:AST_Node, status:str = 'invalid', children:list = None):
-        
+
         self.name = name
         self.father = father
 
@@ -38,13 +33,13 @@ class AST_Node:
     def add_child(self, node:AST_Node):
         self.children.append(node)
 
-    
+
     def validate(self):
         self.status = 'valid'
-    
+
     def mark_error(self):
         self.status = 'error'
-    
+
 
 
 class AST():
@@ -52,13 +47,13 @@ class AST():
     def __init__(self):
         self.root = None
         self.current_node = None
-    
+
 
     def create_root(self, name:str):
         print(f'AST: Created root node "{name}"')
         if self.root is not None:
             raise Exception('Root has already been created')
-        
+
         self.root = AST_Node(name, None)
         self.current_node = self.root # ! Pointer issue?
 
@@ -70,15 +65,15 @@ class AST():
         print(f'AST: Adding child node "{name}" and moving to the child')
 
         new_node = AST_Node(name, self.current_node)
-        
+
         self.current_node.add_child(new_node)
 
         self.current_node = new_node
-        
+
 
     def validate_current_node(self):
 
         print(f'AST: validating current node "{self.current_node.name}" and moving to father "{self.current_node.father.name}"')
         self.current_node.validate()
-        
+
         self.current_node = self.current_node.father

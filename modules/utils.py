@@ -196,7 +196,7 @@ def build_alphabet() -> Alphabet:
     return Alphabet(symbols=ALPHABET_SYMBOLS)
 
 def build_symbolic_table() -> SymbolicTable:
-    """Pre-loads the symbolic table with LALG predeclared identifiers at level 0."""
+    # pré-carrega os identificadores predeclarados da LALG no nível 0
     table = SymbolicTable()
 
     table.inserir(Element(identificador='int',     categoria='tipo',  tipo='integer', nivel=0))
@@ -213,9 +213,6 @@ def build_lexical()->LexicalAnalyzer:
 
 # ! What is this for?
 def serialize_token(token: Token):
-    """
-        
-    """
     lexeme = DISPLAY_LEXEMES.get(token.value, token.value)
     return {
         "token": token.name,
@@ -226,8 +223,6 @@ def serialize_token(token: Token):
 
 # ! What is this for?
 def serialize_error(message: str):
-    """
-    """
     return {
         "erro": message,
         "linha": None,
@@ -235,9 +230,6 @@ def serialize_error(message: str):
     }
 
 def analyze_source(source_code: str):
-    """
-    Builds the lexical analyzer and sets the source code to be analyzed
-    """
     analyzer = LexicalAnalyzer(build_alphabet(), tokens_dict=TOKENS_DICT)
     analyzer.set_source_code(source_code)
 
