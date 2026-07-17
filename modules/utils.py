@@ -1,7 +1,7 @@
 from abstractions import Token
 from registry import SymbolicTable, Element
 from formal_grammar import Alphabet, Symbol
-from engine import LexicalAnalyzer, RDP
+from engine import LexicalAnalyzer, RDP, RESERVED_WORDS
 
 LAST_SET = {
     "S":                    {"."}, 
@@ -187,19 +187,26 @@ ALPHABET_SYMBOLS = [
         # Symbol("/", "divider",      'operator'),
 ]
 
-KEYWORD_IDENTIFIERS = ['program','procedure','begin','end','read','write','var','if','then','else','while','do','int','boolean','true','false','not','and','or']
- 
+PREDECLARED_IDENTIFIERS = ['int', 'boolean', 'true', 'false', 'read', 'write']
+
 DISPLAY_LEXEMES = {value: key for key, value in TOKENS_DICT.items() if len(key) > 1}
 
 
 def build_alphabet() -> Alphabet:
     return Alphabet(symbols=ALPHABET_SYMBOLS)
 
-def build_symbolic_table()->SymbolicTable:
+def build_symbolic_table() -> SymbolicTable:
+    """Pre-loads the symbolic table with LALG predeclared identifiers at level 0."""
+    table = SymbolicTable()
 
-    elements = [Element(element_type='keyword', identifier=id) for id in KEYWORD_IDENTIFIERS]
+    table.inserir(Element(identificador='int',     categoria='tipo',  tipo='integer', nivel=0))
+    table.inserir(Element(identificador='boolean', categoria='tipo',  tipo='boolean', nivel=0))
+    table.inserir(Element(identificador='true',    categoria='const', tipo='boolean', valor=1, nivel=0))
+    table.inserir(Element(identificador='false',   categoria='const', tipo='boolean', valor=0, nivel=0))
+    table.inserir(Element(identificador='read',    categoria='proc',  tipo=None, num_params=0, nivel=0))
+    table.inserir(Element(identificador='write',   categoria='proc',  tipo=None, num_params=0, nivel=0))
 
-    return SymbolicTable(elements)
+    return table
 
 def build_lexical()->LexicalAnalyzer:
     return LexicalAnalyzer(alphabet=build_alphabet(), tokens_dict=TOKENS_DICT, symbolic_table=build_symbolic_table())

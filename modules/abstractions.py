@@ -1,19 +1,21 @@
+from __future__ import annotations
+
 from formal_grammar import NonTerminal
 
-class Token:    
+class Token:
     """
     A token can be formed by one or more symbols, it is the atomic unit extracted from the source code,
     from a lexical perspective.
 
-    Each token has a name, value, and the position in which it was found in the source code (col, lin)  
+    Each token has a name, value, and the position in which it was found in the source code (col, lin)
     """
-    
+
     def __init__(self, name:str, value:str, col:int, lin:int):
         self.name = name
         self.value = value
         self.col = col
         self.lin = lin
-    
+
     def __str__(self):
 
         return f"""
@@ -24,14 +26,14 @@ class Token:
 
 class AST_Node:
 
-    def __init__(self, name:str, father:AST_Node, status:str = 'invalid', children:list = []):
+    def __init__(self, name:str, father:AST_Node, status:str = 'invalid', children:list = None):
         
         self.name = name
         self.father = father
 
         self.status = status if status in {'invalid', 'valid', 'error'} else 'invalid'
 
-        self.children = children
+        self.children = children if children is not None else []
 
     def add_child(self, node:AST_Node):
         self.children.append(node)

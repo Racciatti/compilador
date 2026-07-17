@@ -27,11 +27,14 @@ share/python-wheels/
 MANIFEST
 CLAUDE.md
 .claude
+plano_projeto_lalg.md
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+tests
+
 
 # Installer logs
 pip-log.txt
