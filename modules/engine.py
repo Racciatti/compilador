@@ -336,7 +336,7 @@ class RDP:
 
     def __init__(self, lexical: LexicalAnalyzer, abstract_syntax_tree: AST,
                  sync_table: dict, symbolic_table: SymbolicTable = None,
-                 diagnostics=None):
+                 diagnostics=None, code_generator=None):
 
         self.lexical = lexical
         self.current_token = None
@@ -351,6 +351,10 @@ class RDP:
         self.symbolic_table = symbolic_table
         self.diagnostics = diagnostics
         self.nivel_atual = 0  # current scope level
+
+        # Code generation support (Etapa 3)
+        self.code_generator = code_generator
+        self._tem_procedure = False  # set to True on first PROC_DEC; disables codegen
 
     # ------------------------------------------------------------------
     # Public entry point
@@ -377,6 +381,10 @@ class RDP:
 
         self.__validate_current_token_value(';', 'PROGRAM')
 
+        # Codegen: emit INPP before parsing the block (Seção 5 do plano)
+        if self.code_generator is not None:
+            self.code_generator.gerar('INPP')
+
         self.__parse_block()
 
         self.__next_token()
@@ -386,6 +394,20 @@ class RDP:
         # Semantic: warn about unused variables at program level (nivel 0 user vars)
         # Predeclared identifiers at nivel 0 are excluded (categoria != 'var'/'param')
         self.__semantic_checar_nao_utilizadas(nivel=self.nivel_atual)
+
+        # Codegen: emit PARA after consuming '.', or abort if program has procedures
+        if self.code_generator is not None:
+            if self._tem_procedure:
+                # Abort generation: discard any partial code generated and record info
+                self.code_generator.C = []
+                if self.diagnostics is not None:
+                    self.diagnostics.add(
+                        'info',
+                        '[INFO] Geração de código não suportada para programas com '
+                        'procedimentos. Análise semântica concluída com sucesso.'
+                    )
+            else:
+                self.code_generator.gerar('PARA')
 
         self.finish_parsing()
 
@@ -479,9 +501,18 @@ class RDP:
         id_tokens = self.__parse_id_list_collecting()
 
         # Semantic: insert each identifier into the symbolic table
+        # Codegen: emit AMEM 1 per variable and assign end_relativo (Seção 5 do plano)
         if tipo is not None:
             for id_tok in id_tokens:
                 self.__semantic_inserir_var(id_tok, tipo)
+                if self.code_generator is not None and not self._tem_procedure:
+                    end_rel = self.code_generator.novo_end_relativo()
+                    self.code_generator.gerar('AMEM', 1)
+                    # Grava end_relativo na entrada da tabela de símbolos
+                    if self.symbolic_table is not None:
+                        entry = self.symbolic_table.busca(id_tok.value)
+                        if entry is not None:
+                            entry.end_relativo = end_rel
 
         self.finish_parsing()
 
@@ -608,7 +639,11 @@ class RDP:
         PROC_DEC -> 'procedure' id PROC_DEC_1 ';' BLOCK
         Semantic: insert proc name in current level; then increment level for body.
         On exit: check unused vars in the closing level; remover_nivel; decrement level.
+        Codegen: sets _tem_procedure = True; generation is aborted in parse_program.
         """
+
+        # Codegen: flag that this program contains a procedure (Seção 5 / Decisão 2)
+        self._tem_procedure = True
 
         self.start_parsing('PROC_DEC')
 
@@ -967,6 +1002,7 @@ class RDP:
 
             # Semantic: look up the variable's declared type
             var_tipo = None
+            var_end_relativo = None
             if id_token is not None and self.symbolic_table is not None:
                 entry = self.symbolic_table.busca(id_token.value)
                 if entry is None:
@@ -976,6 +1012,7 @@ class RDP:
                     )
                 else:
                     var_tipo = entry.tipo
+                    var_end_relativo = entry.end_relativo
                     self.symbolic_table.marcar_utilizada(id_token.value)
 
             expr_tipo = self.__parse_expr()
@@ -989,6 +1026,10 @@ class RDP:
                     id_token.lin if id_token else None,
                     id_token.col if id_token else None
                 )
+
+            # Codegen: ARMZ <end_relativo> após gerar código da EXPR (Seção 5 do plano)
+            if self.code_generator is not None and var_end_relativo is not None:
+                self.code_generator.gerar('ARMZ', var_end_relativo)
 
             self.finish_parsing()
             return
@@ -1051,6 +1092,18 @@ class RDP:
                             rel_token.lin, rel_token.col
                         )
 
+            # Codegen: instrução de comparação após os dois operandos (Seção 5 do plano)
+            if self.code_generator is not None:
+                _rel_mepa = {
+                    '=':  'CMIG',
+                    '<>': 'CMDG',
+                    '<':  'CMME',
+                    '<=': 'CMEG',
+                    '>':  'CMMA',
+                    '>=': 'CMAG',
+                }
+                self.code_generator.gerar(_rel_mepa[rel_op])
+
             return 'boolean'
 
         self.__cache_token()
@@ -1086,6 +1139,10 @@ class RDP:
                 unary_token.lin if unary_token else None,
                 unary_token.col if unary_token else None
             )
+
+        # Codegen: INVR após o código do termo se houver menos unário (Seção 5 do plano)
+        if unary_op == '-' and self.code_generator is not None:
+            self.code_generator.gerar('INVR')
 
         result_tipo = self.__parse_simple_expr_1(term_tipo)
 
@@ -1126,6 +1183,11 @@ class RDP:
                     f'(recebeu "{right_tipo}")',
                     op_token.lin, op_token.col
                 )
+
+            # Codegen: SOMA / SUBT / DISJ após gerar código do termo direito (Seção 5 do plano)
+            if self.code_generator is not None:
+                _op_mepa = {'+': 'SOMA', '-': 'SUBT', 'or': 'DISJ'}
+                self.code_generator.gerar(_op_mepa[op])
 
             return expected
 
@@ -1181,6 +1243,11 @@ class RDP:
                     op_token.lin, op_token.col
                 )
 
+            # Codegen: MULT / DIVI / CONJ após gerar código do fator direito (Seção 5 do plano)
+            if self.code_generator is not None:
+                _op_mepa = {'*': 'MULT', 'div': 'DIVI', 'and': 'CONJ'}
+                self.code_generator.gerar(_op_mepa[op])
+
             return expected
 
         self.__cache_token()
@@ -1202,20 +1269,26 @@ class RDP:
         self.__next_token()
 
         # 'true' / 'false' → boolean (Semantic: mark as used)
+        # Codegen: CRCT 1 / CRCT 0 (Seção 5 do plano)
         if self.current_token.value in {'true', 'false'}:
             self.ast.add_leaf(self.current_token)
             if self.symbolic_table is not None:
                 self.symbolic_table.marcar_utilizada(self.current_token.value)
+            if self.code_generator is not None:
+                valor_bool = 1 if self.current_token.value == 'true' else 0
+                self.code_generator.gerar('CRCT', valor_bool)
             self.finish_parsing()
             return 'boolean'
 
         # identifier → look up type in table
+        # Codegen: CRVL <end_relativo> (Seção 5 do plano)
         if self.current_token.name == 'identifier':
             id_token = self.current_token
             self.__cache_token()
             self.__parse_var()
             # Semantic: lookup
             tipo = None
+            end_relativo = None
             if self.symbolic_table is not None:
                 entry = self.symbolic_table.busca(id_token.value)
                 if entry is None:
@@ -1225,11 +1298,14 @@ class RDP:
                     )
                 else:
                     tipo = entry.tipo
+                    end_relativo = entry.end_relativo
                     self.symbolic_table.marcar_utilizada(id_token.value)
+            if self.code_generator is not None and end_relativo is not None:
+                self.code_generator.gerar('CRVL', end_relativo)
             self.finish_parsing()
             return tipo
 
-        # '(' EXPR ')' → type of EXPR
+        # '(' EXPR ')' → type of EXPR (codegen delegated to __parse_expr)
         if self.current_token.value == '(':
             self.ast.add_leaf(self.current_token)
             inner_tipo = self.__parse_expr()
@@ -1239,6 +1315,7 @@ class RDP:
             return inner_tipo
 
         # 'not' FACTOR → boolean (Semantic rule 6: factor must be boolean)
+        # Codegen: (código do fator já gerado recursivamente) + NEGA (Seção 5 do plano)
         if self.current_token.value == 'not':
             not_token = self.current_token
             self.ast.add_leaf(self.current_token)
@@ -1249,6 +1326,8 @@ class RDP:
                     f'(recebeu "{factor_tipo}")',
                     not_token.lin, not_token.col
                 )
+            if self.code_generator is not None:
+                self.code_generator.gerar('NEGA')
             self.finish_parsing()
             return 'boolean'
 
@@ -1263,7 +1342,11 @@ class RDP:
             return None
 
         # integer literal
+        # Codegen: CRCT <valor> (Seção 5 do plano)
+        lit_token = self.current_token
         self.__validate_current_token_name('integer', 'FACTOR')
+        if self.code_generator is not None and lit_token is not None:
+            self.code_generator.gerar('CRCT', int(lit_token.value))
 
         self.finish_parsing()
         return 'integer'
@@ -1276,6 +1359,9 @@ class RDP:
         """
         PROC_CALL_TAIL -> '(' EXPR_LIST ')' | ε
         Semantic rules 3, 8, 9: validate proc args.
+        Codegen (Seção 5 do plano):
+          - read(v1,...,vn): por variável → LEIT + ARMZ <end_relativo>
+          - write(e1,...,en): por expressão → gera código + IMPR; ao final → IMPE
         """
 
         self.start_parsing('PROC_CALL')
@@ -1286,8 +1372,17 @@ class RDP:
 
             self.ast.add_leaf(self.current_token)
 
-            # Collect argument types and tokens for semantic check
-            arg_exprs = self.__parse_expr_list_collecting()
+            proc_name = id_token.value if id_token is not None else None
+
+            # Codegen especial para read/write: intercala instrução após cada expressão
+            if self.code_generator is not None and proc_name in {'read', 'write'}:
+                arg_exprs = self.__parse_expr_list_collecting_com_codegen(proc_name)
+                # IMPE ao final do write
+                if proc_name == 'write':
+                    self.code_generator.gerar('IMPE')
+            else:
+                # Caso geral: coleta tipos sem codegen especial por argumento
+                arg_exprs = self.__parse_expr_list_collecting()
 
             self.__next_token()
 
@@ -1324,6 +1419,10 @@ class RDP:
         """
         COND_COMMAND -> 'if' EXPR 'then' COMMAND COND_COMMAND_1
         Semantic rule 7: condition must be 'boolean'.
+        Codegen:
+          sem else: gera E; DSVF p (reservado); gera C1; back-patch p → próximo índice
+          com else: gera E; DSVF p1; gera C1; DSVS p2; back-patch p1; gera C2; back-patch p2
+          (Seção 5 do plano)
         """
 
         self.start_parsing('COND_COMMAND')
@@ -1343,18 +1442,31 @@ class RDP:
                 self.lexical.lin, self.lexical.col
             )
 
+        # Codegen: reservar DSVF após a condição (Seção 5 do plano)
+        pos_dsvf = None
+        if self.code_generator is not None:
+            pos_dsvf = self.code_generator.gerar('DSVF', None)
+
         self.__next_token()
 
         self.__validate_current_token_value('then', 'COND_COMMAND')
 
         self.__parse_command()
 
-        self.__parse_cond_command_1()
+        # Codegen: gerar DSVS reservado e fazer back-patch do DSVF, se houver else
+        # (delegado ao __parse_cond_command_1 via parâmetro)
+        self.__parse_cond_command_1(pos_dsvf)
 
         self.finish_parsing()
 
-    def __parse_cond_command_1(self):
-        """COND_COMMAND_1 -> 'else' COMMAND | ε"""
+    def __parse_cond_command_1(self, pos_dsvf=None):
+        """
+        COND_COMMAND_1 -> 'else' COMMAND | ε
+        Codegen:
+          - se houver 'else': emite DSVS reservado; back-patch do DSVF para início do else;
+            gera C2; back-patch do DSVS para após o else
+          - se não houver 'else': back-patch do DSVF para próximo índice
+        """
 
         self.__next_token()
 
@@ -1362,7 +1474,25 @@ class RDP:
 
             self.ast.add_leaf(self.current_token)
 
+            # Codegen: DSVS reservado (pula o else ao sair do then), back-patch DSVF para aqui
+            pos_dsvs = None
+            if self.code_generator is not None:
+                pos_dsvs = self.code_generator.gerar('DSVS', None)
+                if pos_dsvf is not None:
+                    self.code_generator.back_patch(pos_dsvf, self.code_generator.proximo_indice())
+
             self.__parse_command()
+
+            # Codegen: back-patch DSVS para após o bloco else
+            if self.code_generator is not None and pos_dsvs is not None:
+                self.code_generator.back_patch(pos_dsvs, self.code_generator.proximo_indice())
+
+            self.__cache_token()
+            return
+
+        # Codegen: sem else — back-patch DSVF para o próximo índice (após C1)
+        if self.code_generator is not None and pos_dsvf is not None:
+            self.code_generator.back_patch(pos_dsvf, self.code_generator.proximo_indice())
 
         self.__cache_token()
 
@@ -1370,6 +1500,8 @@ class RDP:
         """
         ITER_COMMAND -> 'while' EXPR 'do' COMMAND
         Semantic rule 7: condition must be 'boolean'.
+        Codegen: marca inicio; gera E; DSVF p (reservado); gera C; DSVS inicio;
+                 back-patch p → próximo índice (Seção 5 do plano)
         """
 
         self.start_parsing('ITER_COMMAND')
@@ -1377,6 +1509,11 @@ class RDP:
         self.__next_token()
 
         self.__validate_current_token_value('while', 'ITER_COMMAND')
+
+        # Codegen: marca posição do início da condição (alvo do DSVS final)
+        inicio = None
+        if self.code_generator is not None:
+            inicio = self.code_generator.proximo_indice()
 
         cond_tipo = self.__parse_expr()
 
@@ -1388,11 +1525,22 @@ class RDP:
                 self.lexical.lin, self.lexical.col
             )
 
+        # Codegen: DSVF reservado (pula o corpo quando condição falsa)
+        pos_dsvf = None
+        if self.code_generator is not None:
+            pos_dsvf = self.code_generator.gerar('DSVF', None)
+
         self.__next_token()
 
         self.__validate_current_token_value('do', 'ITER_COMMAND')
 
         self.__parse_command()
+
+        # Codegen: DSVS de volta ao início da condição; back-patch DSVF para após DSVS
+        if self.code_generator is not None:
+            self.code_generator.gerar('DSVS', inicio)
+            if pos_dsvf is not None:
+                self.code_generator.back_patch(pos_dsvf, self.code_generator.proximo_indice())
 
         self.finish_parsing()
 
@@ -1513,6 +1661,84 @@ class RDP:
 
         self.__cache_token()
         return []
+
+    def __parse_expr_list_collecting_com_codegen(self, proc_name: str) -> list:
+        """
+        EXPR_LIST -> EXPR EXPR_LIST_1
+        Variante para read/write: intercala geração de código após cada expressão.
+          - read: LEIT + ARMZ <end_relativo> por variável (a expressão deve ser um identifier)
+          - write: IMPR por expressão (IMPE é emitido pelo chamador após o loop)
+        Retorna lista de dicts {'tipo', 'lin', 'col'} para validação semântica.
+        (Seção 5 do plano)
+        """
+        self.start_parsing('EXPR_LIST')
+
+        lin = self.lexical.lin
+        col = self.lexical.col
+        tipo = self.__parse_expr()
+        self.__codegen_pos_arg_builtin(proc_name, tipo)
+        results = [{'tipo': tipo, 'lin': lin, 'col': col}]
+
+        more = self.__parse_expr_list_1_collecting_com_codegen(proc_name)
+        results.extend(more)
+
+        self.finish_parsing()
+        return results
+
+    def __parse_expr_list_1_collecting_com_codegen(self, proc_name: str) -> list:
+        """
+        EXPR_LIST_1 -> ',' EXPR EXPR_LIST_1 | ε
+        Variante com codegen intercalado para read/write.
+        """
+        self.__next_token()
+
+        if self.current_token.value == ',':
+
+            self.ast.add_leaf(self.current_token)
+
+            lin = self.lexical.lin
+            col = self.lexical.col
+            tipo = self.__parse_expr()
+            self.__codegen_pos_arg_builtin(proc_name, tipo)
+            results = [{'tipo': tipo, 'lin': lin, 'col': col}]
+
+            more = self.__parse_expr_list_1_collecting_com_codegen(proc_name)
+            results.extend(more)
+            return results
+
+        self.__cache_token()
+        return []
+
+    def __codegen_pos_arg_builtin(self, proc_name: str, tipo: str):
+        """
+        Emite instrução MEPA após cada argumento de read/write.
+          - read: a expressão gerou CRVL/CRCT mas read precisa de LEIT + ARMZ.
+            Porém, a expressão (identifier) já foi gerada como CRVL — para read,
+            precisamos do end_relativo da variável. O código da expressão (CRVL) foi
+            gerado desnecessariamente; precisamos desfazê-lo e substituir por LEIT+ARMZ.
+            Estratégia: remover a última instrução gerada (que deve ser CRVL <n>),
+            emitir LEIT, emitir ARMZ <n>.
+          - write: a expressão já está gerada na pilha; emitir IMPR.
+        (Seção 5 do plano)
+        """
+        if self.code_generator is None:
+            return
+
+        if proc_name == 'write':
+            self.code_generator.gerar('IMPR')
+
+        elif proc_name == 'read':
+            # A última instrução gerada pela expressão (identificador) é CRVL <end_rel>
+            # Substituímos por LEIT + ARMZ <end_rel>
+            if self.code_generator.C:
+                ultima = self.code_generator.C[-1]
+                if ultima.op == 'CRVL' and ultima.arg is not None:
+                    end_rel = ultima.arg
+                    # Remover o CRVL desnecessário
+                    self.code_generator.C.pop()
+                    # Emitir LEIT + ARMZ
+                    self.code_generator.gerar('LEIT')
+                    self.code_generator.gerar('ARMZ', end_rel)
 
     # ------------------------------------------------------------------
     # Semantic helpers
