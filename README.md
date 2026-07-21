@@ -1,8 +1,10 @@
 # Compilador LALG
 
-Compilador completo para LALG, um subconjunto de Pascal com tipos inteiros e booleanos, estruturas de controle (`if`/`while`), procedimentos e I/O via `read`/`write`. Implementado manualmente em Python puro — sem geradores de parser, sem bibliotecas de compiladores de terceiros.
+Compilador completo para LALG, um subconjunto de Pascal com tipos inteiros e booleanos, estruturas de controle (`if`/`while`), procedimentos e I/O via `read`/`write`. Implementado manualmente em Python puro.
 
-O pipeline tem cinco fases sequenciais: análise léxica → análise sintática → análise semântica → geração de código intermediário (MEPA) → interpretação. Todas as fases compartilham um único objeto `Diagnostics` que acumula erros; qualquer erro em qualquer fase impede as fases seguintes de executar.
+O pipeline tem cinco fases: análise léxica, análise sintática, análise semântica, geração de código intermediário (MEPA) e interpretação. 
+
+Todas as fases compartilham um único objeto `Diagnostics` que acumula erros; qualquer erro em qualquer fase impede as fases seguintes de executar.
 
 ---
 
@@ -23,9 +25,9 @@ modules/
 
 ---
 
-## Fase 1 — Análise Léxica
+## Análise Léxica
 
-**Módulo:** `engine.py` → classe `LexicalAnalyzer`
+**Módulo:** `engine.py` - classe `LexicalAnalyzer`
 
 O analisador léxico é um autômato manual implementado como um loop de leitura caractere a caractere sobre o código-fonte (com um `$` sentinela ao final). A cada chamada de `get_next_token()` ele consome exatamente um token e retorna um objeto `Token(name, value, col, lin)`.
 
@@ -41,11 +43,11 @@ A distinção entre `keyword` e `identifier` é puramente baseada no conjunto `R
 
 ---
 
-## Fase 2 — Análise Sintática
+## Análise Sintática
 
-**Módulo:** `engine.py` → classe `RDP` (Recursive Descent Parser)
+**Módulo:** `engine.py`, classe `RDP` (Recursive Descent Parser)
 
-O parser é recursivo-descendente, implementado à mão seguindo a gramática LL(1) da LALG (documentada em `grammar_construction.md`). Cada não-terminal da gramática corresponde a um método privado `__parse_X` na classe `RDP`. O parser consome tokens via `get_next_token()` do léxico e constrói a AST (`abstractions.py`) durante o percurso.
+O parser é recursivo-descendente, implementado seguindo a gramática LL(1) da LALG (documentada em `grammar_construction.md`). Cada não-terminal da gramática corresponde a um método privado `__parse_X` na classe `RDP`. O parser consome tokens via `get_next_token()` do léxico e constrói a AST (`abstractions.py`) durante o percurso.
 
 ### Estrutura geral da gramática
 
@@ -72,15 +74,15 @@ Quando o token corrente não é o esperado, o parser chama `__handle_error`, que
 
 ### AST
 
-A árvore sintática é construída incrementalmente durante o parse. `AST` mantém um ponteiro `current_node` que avança para filhos (`add_node`) e retrocede para o pai (`validate_current_node`) conforme as produções são reconhecidas. Cada `AST_Node` tem lista própria de filhos (o bug clássico de `children=[]` como argumento default mutável foi corrigido com `children=None`).
+A árvore sintática é construída incrementalmente durante o parse. `AST` mantém um ponteiro `current_node` que avança para filhos (`add_node`) e retrocede para o pai (`validate_current_node`) conforme as produções são reconhecidas. 
 
 ---
 
-## Fase 3 — Análise Semântica
+## Análise Semântica
 
 **Módulos:** `registry.py` (tabela de símbolos) + `diagnostics.py` (coletor) + `engine.py` (ações embutidas no RDP)
 
-A análise semântica é integrada diretamente ao parser — não há uma passagem separada sobre a AST. As ações semânticas são executadas nos pontos exatos das produções gramaticais, seguindo o modelo de tradução dirigida pela sintaxe.
+A análise semântica é integrada diretamente ao parser: Não há uma passagem separada sobre a AST. As ações semânticas são executadas nos pontos exatos das produções gramaticais, seguindo o modelo de tradução dirigida pela sintaxe.
 
 ### Tabela de símbolos (`registry.py`)
 
@@ -91,7 +93,7 @@ A tabela é uma estrutura única global (`SymbolicTable`), implementada como lis
 | `identificador` | chave de busca |
 | `categoria` | `'tipo'`, `'const'`, `'proc'`, `'nome_prog'`, `'var'`, `'param'` |
 | `tipo` | `'integer'`, `'boolean'`, ou `None` (para proc/nome_prog) |
-| `valor` | usado só para constantes (`true`→1, `false`→0) |
+| `valor` | usado só para constantes (`true`:1, `false`:0) |
 | `nivel` | nível de aninhamento (0 = programa principal) |
 | `utilizada` | flag para detectar variáveis declaradas e não usadas |
 | `end_relativo` | endereço na pilha de dados (preenchido na geração de código) |
@@ -99,12 +101,12 @@ A tabela é uma estrutura única global (`SymbolicTable`), implementada como lis
 
 Antes do parse começar, `build_symbolic_table()` pré-insere os seis identificadores pré-declarados da LALG em `nivel=0`: `int`, `boolean`, `true`, `false`, `read`, `write`.
 
-**Busca com escopo:** `busca(id)` percorre a lista de trás para frente (do nível mais alto para o 0), retornando a primeira ocorrência visível. Ao sair de um procedimento, `remover_nivel(n)` apaga todas as entradas do nível `n`, o que elimina automaticamente variáveis locais do escopo — sem necessidade de pilha de tabelas separadas.
+**Busca com escopo:** `busca(id)` percorre a lista de trás para frente (do nível mais alto para o 0), retornando a primeira ocorrência visível. Ao sair de um procedimento, `remover_nivel(n)` apaga todas as entradas do nível `n`, o que elimina automaticamente variáveis locais do escopo (sem necessidade de pilha de tabelas separadas).
 
 ### Ações semânticas integradas no parser
 
 - **Ao declarar** (`VAR_DEC`, parâmetros formais, `PROC_DEC`): verifica duplicata no nível atual via `busca_nivel_atual`; insere a entrada com a categoria e tipo corretos; ao entrar em um procedimento, incrementa `nivel_atual`; ao sair, checa não-utilizadas e chama `remover_nivel`.
-- **Ao usar** (`FACTOR` → id, chamada de procedimento): busca na tabela; emite `[ERRO SEMÂNTICO]` se não encontrado; marca `utilizada=True`.
+- **Ao usar** (`FACTOR`(id), chamada de procedimento): busca na tabela; emite `[ERRO SEMÂNTICO]` se não encontrado; marca `utilizada=True`.
 - **Tipos nas expressões:** os métodos `__parse_expr`, `__parse_simple_expr`, `__parse_term` e `__parse_factor` retornam o tipo computado (`'integer'` ou `'boolean'`), propagando de baixo para cima. O tipo é verificado no ponto de uso.
 
 ### Regras de erro semântico
@@ -119,16 +121,16 @@ Antes do parse começar, `build_symbolic_table()` pré-insere os seis identifica
 8. `read(...)` com argumento que não é variável `integer`
 9. `write(...)` com argumento que não é expressão `integer`
 10. Variável declarada e nunca utilizada (emite `[AVISO SEMÂNTICO]`, não bloqueia compilação)
-11. Indexação `id[expr]` — vetores não suportados pela LALG
-12. Literal `real` em qualquer posição — tipo `real` não suportado pela LALG
+11. Indexação `id[expr]`: vetores não suportados pela LALG
+12. Literal `real` em qualquer posição: tipo `real` não suportado pela LALG
 
-Todos os erros são acumulados em `Diagnostics` e **não** interrompem o parse — o compilador continua para coletar o máximo de diagnósticos possível em uma única passagem.
+Todos os erros são acumulados em `Diagnostics` e **não** interrompem o parse (o compilador continua para coletar o máximo de diagnósticos possível em uma única passagem).
 
 ---
 
-## Fase 4 — Geração de Código Intermediário
+## Geração de Código Intermediário
 
-**Módulo:** `codegen.py` → `CodeGenerator`; ações de geração em `engine.py`
+**Módulo:** `codegen.py` - `CodeGenerator`; ações de geração em `engine.py`
 
 A máquina alvo é a **MEPA** (Máquina de Execução de Programas Algol), uma máquina de pilha com um vetor de instruções `C` e um vetor de dados `D`. O `CodeGenerator` mantém a lista `C` de objetos `Instruction(op, arg)` e um contador de offset para atribuição de endereços relativos a variáveis.
 
