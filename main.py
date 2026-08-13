@@ -111,9 +111,15 @@ elif selection == "Enviar arquivo .txt":
     if arquivo is not None:
         texto_bruto = arquivo.read().decode("utf-8")
 
+# Controle de estado da análise via session_state (evita reset da página ao interagir com widgets)
+if "analisado" not in st.session_state:
+    st.session_state["analisado"] = False
+
 # Botão para analisar
 analisar = st.button("Analisar", width="content")
 
+if analisar:
+    st.session_state["analisado"] = True
 
 # Funções de suporte para Árvore Sintática e Tabela de Símbolos
 def generate_ast_dot(ast_root):
@@ -235,10 +241,11 @@ def serialize_symbol_table(symtable):
     ]
 
 
-# Renderização dos resultados quando o botão Analisar for acionado
-if analisar:
+# Renderização dos resultados quando a análise tiver sido acionada
+if st.session_state.get("analisado", False):
     if not texto_bruto or not texto_bruto.strip():
         st.warning("Insira um texto ou envie um arquivo antes de analisar.")
+        st.session_state["analisado"] = False
     else:
         # 1 - Análise Léxica
         tokens, erros = ut.analyze_source(texto_bruto)
@@ -329,11 +336,9 @@ if analisar:
                         "Legenda: Azul = Nós Sintáticos Válidos | Verde = Tokens (Folhas) | Amarelo/Vermelho = Nós com Erros/Pendências"
                     )
 
-                # VERIFICAR PORQUE NÃO ESTÁ FUNCIONANDO
                 elif viz_mode == "🌳 Árvore Interativa (Expansores)": 
                     render_expander_tree(ast.root)
 
-                # VERIFICAR PORQUE NÃO ESTÁ FUNCIONANDO
                 elif viz_mode == "📄 Estrutura Textual (ASCII Tree)":
                     text_lines = render_text_tree(ast.root)
                     st.code("\n".join(text_lines), language="text")
